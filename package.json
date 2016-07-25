@@ -1,12 +1,26 @@
 {
-  "name": "openshift-cartridge-nodejs-template",
-  "version": "1.0.1",
-  "description": "Custom Node.js cartridge for OpenShift - sample application",
-  "private": true,
-  "main": "start.js",
+  "name": "nse_proxy",
+  "version": "0.0.1",
+  "description": "proxies the calls to nse to give result in more meaningful format",
+  "main": "stock_server.js",
   "scripts": {
-    "start": "node --use_strict start.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Ionut-Cristian Florescu <ionut.florescu@gmail.com>",
-  "license": "ISC"
+  "author": "palash kulshreshtha",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^2.0.1",
+    "csv-parse": "^1.1.5",
+    "debug": "^2.2.0",
+    "domutils": "^1.5.1",
+    "express": "^4.14.0",
+    "htmlparser2": "^3.9.1",
+    "limiter": "^1.1.0",
+    "moment": "^2.14.1",
+    "mysql": "^2.11.1",
+    "request": "^2.73.0",
+    "soupselect": "^0.2.0",
+    "sql": "^0.70.1",
+    "xpath": "0.0.23"
+  }
 }
