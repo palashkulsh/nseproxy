@@ -9,7 +9,7 @@ con <- dbConnect(MySQL(),user="stocks_user",password="stocks_pass",db_name="stoc
 on.exit(dbDisconnect(con));
 dbSendQuery(con,'use stocks');
 query<-sprintf("select * from stock_data where symbol='%s'",symbol1)
-f<-dbSendQuery(con,"select * from stock_data where symbol='pnb'");
+f<-dbSendQuery(con,query);
 data<-fetch(f,n=-1);#n=-1 fetches all pending records
 return(data);			  
 }
@@ -124,4 +124,10 @@ return (f)    ;
 plotSimultaneously<-function (symbol1,symbol2){
 pairWiseData<-findPairWiseData(symbol1,symbol2)
 ggplot(pairWiseData,aes(date,sd1_price))+geom_line(aes(color=symbol1))+geom_line(data=pairWiseData,aes(date,sd2_price,color=symbol2))+geom_line(data=pairWiseData,aes(date,(sd2_price-sd1_price)/((sd2_price+sd1_price)/2),color='change'))+scale_colour_manual("",breaks = c(symbol1, symbol2,'change'), values = c("red", "brown",'black'))
+}
+
+plotSingle<-function (symbol1){
+data<-findDataForSymbol(symbol1)
+data$date<-as.Date(data$date);
+ggplot(data,aes(date,average_price))+geom_line(aes(color=symbol1))+scale_colour_manual("",breaks=c(symbol1),values=c("red"))
 }
