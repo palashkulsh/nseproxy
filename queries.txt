@@ -1,0 +1,2 @@
+Tells which stocks have positive change in close price over a period
+select symbol,avg(100*(close_price-prev_close)/prev_close) as avg_growth,min(100*(close_price-prev_close)/prev_close) as min, max(100*(close_price-prev_close)/prev_close) as max from stock_data where date between '2016-09-20' and '2016-10-04' and average_price>10 group by symbol having max>0 and min > 0 order by avg_growth;

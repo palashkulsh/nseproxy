@@ -22,8 +22,34 @@ query<-sprintf("select sd1.date,sd1.average_price as sd1_price,sd2.average_price
 print(query);		     
 f<-dbSendQuery(con,query);
 data<-fetch(f,n=-1);#n=-1 fetches all pending records
+return( cor(data$sd1_price,data$sd2_price));			    
+}
+
+
+findPairWiseData<- function(symbol1,symbol2){
+con <- dbConnect(MySQL(),user="stocks_user",password="stocks_pass",db_name="stocks",host="127.0.0.1");
+on.exit(dbDisconnect(con));
+dbSendQuery(con,'use stocks');
+query<-sprintf("select sd1.date,sd1.average_price as sd1_price,sd2.average_price as sd2_price  from stock_data as sd1 inner join stock_data as sd2 on sd1.date=sd2.date where sd1.symbol='%s' and sd2.symbol='%s' and sd1.series='EQ' and sd2.series='EQ'",symbol1,symbol2);
+print(query);		     
+f<-dbSendQuery(con,query);
+data<-fetch(f,n=-1);#n=-1 fetches all pending records
+data$date<-as.Date(data$date);
 return( data);			    
 }
+
+
+findCrossCorrelation<- function(symbol1,symbol2){
+con <- dbConnect(MySQL(),user="stocks_user",password="stocks_pass",db_name="stocks",host="127.0.0.1");
+on.exit(dbDisconnect(con));
+dbSendQuery(con,'use stocks');
+query<-sprintf("select sd1.date,sd1.average_price as sd1_price,sd2.average_price as sd2_price  from stock_data as sd1 inner join stock_data as sd2 on sd1.date=sd2.date where sd1.symbol='%s' and sd2.symbol='%s' and sd1.series='EQ' and sd2.series='EQ'",symbol1,symbol2);
+print(query);		     
+f<-dbSendQuery(con,query);
+data<-fetch(f,n=-1);#n=-1 fetches all pending records
+return( ccf(data$sd1_price,data$sd2_price));			    
+}
+
 
 findAllSymbols<- function(){
 con <- dbConnect(MySQL(),user="stocks_user",password="stocks_pass",db_name="stocks",host="127.0.0.1");
@@ -93,4 +119,9 @@ if(!is.null(parallelCluster)) {
   parallelCluster <- c()
 }
 return (f)    ;
+}
+
+plotSimultaneously<-function (symbol1,symbol2){
+pairWiseData<-findPairWiseData(symbol1,symbol2)
+ggplot(pairWiseData,aes(date,sd1_price))+geom_line(aes(color=symbol1))+geom_line(data=pairWiseData,aes(date,sd2_price,color=symbol2))+geom_line(data=pairWiseData,aes(date,(sd2_price-sd1_price)/((sd2_price+sd1_price)/2),color='change'))+scale_colour_manual("",breaks = c(symbol1, symbol2,'change'), values = c("red", "brown",'black'))
 }
