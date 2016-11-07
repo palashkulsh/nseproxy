@@ -97,23 +97,7 @@ var MoneyControlApi = {
 }
 
 function insertToTable(cb){
-    var symbols=[ 'BIRLAERIC',
-  'DUNCANSLTD',
-  'ELDERPHARM',
-  'ERAINFRA',
-  'IVZINGOLD',
-  'IVZINNIFTY',
-  'JCHAC',
-  'LALPATHLAB',
-  'LICNETFSEN',
-  'LICNFNHGP',
-  'MIDCAPIWIN',
-  'N100',
-  'NV20IWIN',
-  'PREMIER',
-  'RELNV20',
-  'SETF10GILT',
-  'SHK' ]
+    var symbols=[ 'ATNINTER','BIRLACABLE','CUPID','ENDURANCE','FCONSUMER','GNA','HPL','ICICIPRULI','IDFNIFTYET','KREBSBIO','LTTS','MARATHON','MASKINVEST','MAZDA','REL100NAV','RELBANKNAV','RELCONSNAV','RELDIVNAV','RELGOLDNAV','RELNV20NAV','RENIFTYNAV','SABEVENTS','SPECTACLE','TVVISION' ]
 ;
     Async.mapLimit(symbols,500,function (symbol,callback){	
 	MoneyControlApi.getMoneyControlSymbol(symbol,function (err,returnOpts){
@@ -148,9 +132,9 @@ module.exports= MoneyControlApi;
 	// HistoricalDataApi.getHistoricalData(opts,function (err,result){
 	//     console.log(err,result)
 	// })
-	MoneyControlApi.getMoneyControlSymbol('NV20IWIN',function (err,result){
-	    console.log(err,result)
-	});
-	// insertToTable(console.log);
+	// MoneyControlApi.getMoneyControlSymbol('NV20IWIN',function (err,result){
+	//     console.log(err,result)
+	// });
+	insertToTable(console.log);
     }
 })();

@@ -1,0 +1,1 @@
+1) make a graph with symbols as nodes and each correlation value as weight between two nodes. Dont know what its use will be
