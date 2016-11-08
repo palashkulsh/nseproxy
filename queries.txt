@@ -16,3 +16,16 @@ select distinct f.symbol,f.key_text,f16.value as '2016',f15.value as '2015',f14.
 
 -also adding 52 week low
 select temp.symbol,temp.avg_growth,temp.min,temp.max,temp.avgprice,yearlow.low52,yearlow.max52 from (select symbol,avg(100*(close_price-prev_close)/prev_close) as avg_growth,min(100*(close_price-prev_close)/prev_close) as min, max(100*(close_price-prev_close)/prev_close) as max ,avg(close_price) as avgprice from stock_data where date between  date_sub(curdate(),interval 5 day ) and  curdate() and average_price>10 group by symbol having max>0 and min > -2.0 and abs(max)>abs(min) order by avg_growth)temp inner join (select symbol,min(close_price) as low52 , max(close_price) as max52 from stock_data where date>date_sub(curdate(),interval 1 year) and date<=curdate() group by symbol ) yearlow on temp.symbol=yearlow.symbol where yearlow.max52-temp.avgprice>2*(temp.avgprice-yearlow.low52) order by avgprice;
+
+()52 high low in a period
+select hl.symbol,hl.52high,hl.52low,sdh.date as highdate,sdl.date as lowdate from (select symbol, min(average_price) as 52low,max(average_price) 52high from stock_data where series='eq' and date between  date_sub(curdate(),interval 1 year ) and  curdate() and symbol='agarind' group by symbol )hl inner join stock_data sdh on sdh.symbol=hl.symbol and hl.52high=sdh.average_price inner join stock_data sdl on hl.symbol=sdl.symbol and hl.52low=sdl.average_price and sdl.series='eq';
+
+()52 low in a period (15 days)
+select hl.symbol,hl.52low,sdl.date as lowdate from (select symbol, min(average_price) as 52low,max(average_price) 52high from stock_data where series='eq' and date between  date_sub(curdate(),interval 1 year ) and  curdate()  group by symbol )hl  inner join stock_data sdl on hl.symbol=sdl.symbol and hl.52low=sdl.average_price and sdl.series='eq' and sdl.date between date_sub(curdate(),interval 15 day) and curdate();
+
+()52 low in a period with current value
+select hl.symbol,hl.52low,sdl.date as lowdate,hl.maxdate,sdc.average_price as curprice from (select symbol, min(average_price) as 52low,max(average_price) 52high,max(date) maxdate from stock_data where series='eq' and date between  date_sub(curdate(),interval 1 year ) and  curdate()  group by symbol )hl  inner join stock_data sdl on hl.symbol=sdl.symbol and hl.52low=sdl.average_price and sdl.series='eq' inner join  stock_data  sdc on sdc.symbol=hl.symbol and sdc.series='eq'  and sdc.date = hl.date where sdl.date   between date_sub(curdate(),interval 15 day) and curdate();
+
+
+
+
