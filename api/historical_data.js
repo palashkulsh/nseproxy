@@ -16,7 +16,7 @@ var Constants = require('../config/constants');
 
 function httpsHandler(err, response, body, cb) {
     if(err){
-	console.error('to err is human',err)
+	console.error('to err is human',err);
 	return cb(err);
     }
     var htmlHandler = new htmlparser.DefaultHandler(domHandlingFunc);
@@ -204,8 +204,8 @@ module.exports=HistoricalData;
     if(require.main==module){
 	var options={
 	    symbol:'pnb',
-	    fromDate:'03-11-2016',
-	    toDate:'07-11-2016',
+	    fromDate:'08-11-2016',
+	    toDate:'09-11-2016',
 	    days:364
 	}
 	getAndInsertHistDataForAllStocks(options,function (err,result){
