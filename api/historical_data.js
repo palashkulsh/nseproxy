@@ -23,7 +23,7 @@ function httpsHandler(err, response, body, cb) {
     var parser = new htmlparser.Parser(htmlHandler,{decodeEntities:true,xmlData:true});
     parser.parseComplete(body);
     ///////////////////////
-    function domHandlingFunc(error, dom) {
+   function domHandlingFunc(error, dom) {
 	if (error){
 	    console.log( 'error', error );
 	    process.exit(1);
@@ -186,7 +186,7 @@ function getAndInsertHistDataForAllStocks(options,callback){
 	temp.days = options.days;
 	allOpts.push(temp);
     });
-    Async.eachLimit(allOpts,100,function (eachOpt,cb){
+    Async.eachLimit(allOpts,10,function (eachOpt,cb){
 	debug('processing '+eachOpt.symbol);
 	getAndInsertHistoricalDataOverDateRange(eachOpt,cb);	
     },function (err){
@@ -204,8 +204,8 @@ module.exports=HistoricalData;
     if(require.main==module){
 	var options={
 	    symbol:'pnb',
-	    fromDate:'08-11-2016',
-	    toDate:'09-11-2016',
+	    fromDate:'10-11-2016',
+	    toDate:'11-11-2016',
 	    days:364
 	}
 	getAndInsertHistDataForAllStocks(options,function (err,result){

@@ -21,6 +21,10 @@ function nseToSystemDataActual(data){
 	return newData;
     }
     Object.keys(data).forEach(function (oldKey){
+	if(oldKey=='Date'){	// directly converting date from api to new Date() gives date of next day due to time zones
+	    data[oldKey] = data[oldKey].getFullYear()+'-'+(data[oldKey].getMonth()+1)+'-'+data[oldKey].getDate();
+
+	}
 	if(Constants.NSE_TO_SYSTEM_MAP[oldKey]){
 	    newData[Constants.NSE_TO_SYSTEM_MAP[oldKey]]=data[oldKey];	    
 	}
