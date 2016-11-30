@@ -6,6 +6,4 @@ run api/share_holding_pattern.js for populating holdings table which shows the s
 
 things to do
 -
-add table creation sql in resources
--
 add proper doc so that can be used even after 10 years
