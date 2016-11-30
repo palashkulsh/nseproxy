@@ -186,7 +186,7 @@ function getAndInsertHistDataForAllStocks(options,callback){
 	temp.days = options.days;
 	allOpts.push(temp);
     });
-    Async.eachLimit(allOpts,10,function (eachOpt,cb){
+    Async.eachLimit(allOpts,100,function (eachOpt,cb){
 	debug('processing '+eachOpt.symbol);
 	getAndInsertHistoricalDataOverDateRange(eachOpt,cb);	
     },function (err){
@@ -204,8 +204,8 @@ module.exports=HistoricalData;
     if(require.main==module){
 	var options={
 	    symbol:'pnb',
-	    fromDate:'10-11-2016',
-	    toDate:'11-11-2016',
+	    fromDate:'29-11-2016',
+	    toDate:'30-11-2016',
 	    days:364
 	}
 	getAndInsertHistDataForAllStocks(options,function (err,result){

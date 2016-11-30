@@ -19,7 +19,12 @@ var Constants = {
 	'% Dly Qt to Traded Qty'	:	'percent_dly_qt_to_traded_qty'	,
 
     },
-    
+    NSE_TO_SYSTEM_HOLDING_MAP:{
+	'Promoter & Promoter Group' : 'promoter',
+	'Public' : 'public',
+	'Shares held by Employee Trusts': 'employee',
+	'Total': 'total'
+    },
     symbols: Symbols
 };
 module.exports = Constants;
