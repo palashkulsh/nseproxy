@@ -1,3 +1,5 @@
+// it maps the symbol available on moneycontrol site to nse compatible symbols
+
 var Async = require('async');
 var MoneyControlModel = require('../model/money_control');
 var request = require("request");
