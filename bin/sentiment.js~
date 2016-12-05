@@ -1,1 +1,0 @@
-var sentiment= require('sentiment');
