@@ -1,4 +1,6 @@
 var debug = require("debug")('bin.bonus');
+var debugFlow = require("debug")('flow.bin.bonus');
+
 var util = require("util");
 var Async = require("async");
 var request = require("request");
@@ -14,20 +16,25 @@ var tableToSystemMap = {
 }
 
 function initMcToSymbolMap(cb){
+    debugFlow('initMcToSymbolMap');
     var query = 'select symbol,mc_symbol from symbol_mc_map';
-    SqlLib.exec(query,function (err,res){
-	if(err){
-	    return cb(err);
-	}
-	var map={};
-	res.forEach(function (eachres){
-	    map[eachres.mc_symbol] = eachres.symbol;
-	});
-	return cb(null, map);
+    SqlLib.exec(query,function cb1(err, res) {
+        debugFlow('cb1');
+        if(err){
+	    debug(err);
+            return cb(err);
+        }
+        var map={};
+        res.forEach(function cb2(eachres) {
+            debugFlow('cb2');
+            map[eachres.mc_symbol] = eachres.symbol;
+        });
+        return cb(null, map);
     });
 }
 
 function getBonusForYear(year,cb){
+    debugFlow('getBonusForYear');
     debug('calling bonus for year '+year);
     var options = { method: 'GET',
 		    url: 'http://www.moneycontrol.com/stocks/marketinfo/bonus/homebody.php',
@@ -36,100 +43,128 @@ function getBonusForYear(year,cb){
 		    { 'postman-token': 'f83cb2fb-8ded-195f-f1d2-d137eb98ddd2',
 		      'cache-control': 'no-cache' } };
 
-    request(options, function (error, response, body) {
-	if (error) cb(error);
-	debug('gotData for year '+year);
-	return cb(null,body);
+    request(options, function cb3(error, response, body) {
+        debugFlow('cb3');
+        if (error) {
+	    return cb(error)
+	};
+        debug('gotData for year '+year);
+        return cb(null,body);
     });
 }
 
 function getTables(html,cb){
+    debugFlow('getTables');
     var tablesAsJson = tabletojson.convert(html);
     return cb(null,tablesAsJson);
 }
 
 function insertToBonusTable(data,cb){
+    debugFlow('insertToBonusTable');
     var insertData=[];
     if(!util.isArray(data)){
 	insertData = [data];
     }else{
 	insertData = data;
     }
-    Async.eachLimit(insertData,1,function(eachData,lcb){
-	var query = util.format('insert into bonus (symbol,bonus_share,holds_share,record,announcement,ex_bonus) values ("%s","%s","%s","%s","%s","%s")',eachData.symbol,eachData.bonus_share,eachData.holds_share,eachData.record,eachData.announcement,eachData.ex_bonus);
-	debug(query);
-	SqlLib.exec(query,function (err){ 
-	    if(err)
+    Async.eachLimit(insertData,1,function cb4(eachData, lcb) {
+        debugFlow('cb4');
+        var query = util.format('insert into bonus (symbol,bonus_share,holds_share,record,announcement,ex_bonus) values ("%s","%s","%s","%s","%s","%s")',eachData.symbol,eachData.bonus_share,eachData.holds_share,eachData.record,eachData.announcement,eachData.ex_bonus);
+        debug(query);
+	if(eachData.symbol=='MINDACORP')
+	    debugger
+        SqlLib.exec(query,function cb5(err) {
+            debugFlow('cb5');
+            if(err){
 		debug(err.toString());
-	    return lcb()
-	});
-    },cb);
-}
-
-function fetchBonus(year,cb){    
-    getBonusForYear(year,function (err,html){
+	    }
+            return lcb();
+        });
+    },function (err){
 	if(err){
 	    debug(err);
-	    return cb(err);
 	}
-	getTables(html,function (err, data){
-	    if(err){
+	return cb();
+    });
+}
+
+function fetchBonus(year,cb){
+    debugFlow('fetchBonus');
+    getBonusForYear(year,function cb6(err, html) {
+        debugFlow('cb6');
+        if(err){
+            debug(err);
+            return cb(err);
+        }
+        getTables(html,function cb7(err, data) {
+            debugFlow('cb7');
+            if(err){
 		return cb(err);
-	    }
-	    initMcToSymbolMap(function (err,map){
-		if(err){
-		    return cb(err);
-		}
-		debugger
-		var newData = [];
-		data.forEach(function (eachTable){
-		    eachTable.forEach(function(k){
-			var temp={};
-			if(!k.mc_symbol || !map[k.mc_symbol]){
-			    return;
-			}
-			temp.symbol = map[k.mc_symbol];
-			Object.keys(tableToSystemMap).forEach(function (key){
-			    if(k[key]){
-				temp[tableToSystemMap[key]]=k[key];
-			    }
-			});
-			temp.bonus_share=temp.ratio.split(':')[0];
-			temp.holds_share=temp.ratio.split(':')[1];
-			temp.announcement = moment(temp.announcement,'DD-MM-YYYY').isValid() && moment(temp.announcement,'DD-MM-YYYY').format('YYYY-MM-DD');
-			temp.record = moment(temp.record,'DD-MM-YYYY').isValid() && moment(temp.record,'DD-MM-YYYY').format('YYYY-MM-DD')
-			temp.ex_bonus = moment(temp.ex_bonus,'DD-MM-YYYY').isValid() && moment(temp.ex_bonus,'DD-MM-YYYY').format('YYYY-MM-DD');
-			newData.push(temp);
-		    });
-		});
-		return cb(null, newData);
-	    });
-	});
+            }
+            initMcToSymbolMap(function cb8(err, map) {
+                debugFlow('cb8');
+                if(err){
+                    return cb(err);
+                }
+                var newData = [];
+                data.forEach(function cb9(eachTable) {
+                    debugFlow('cb9');
+                    eachTable.forEach(function cb10(k) {
+                        debugFlow('cb10');
+                        var temp={};
+                        if(!k.mc_symbol || !map[k.mc_symbol]){
+                            return;
+                        }
+                        temp.symbol = map[k.mc_symbol];
+                        Object.keys(tableToSystemMap).forEach(function cb11(key) {
+                            debugFlow('cb11');
+                            if(k[key]){
+                            temp[tableToSystemMap[key]]=k[key];
+                            }
+                        });
+                        temp.bonus_share=temp.ratio.split(':')[0];
+                        temp.holds_share=temp.ratio.split(':')[1];
+                        temp.announcement = moment(temp.announcement,'DD-MM-YYYY').isValid() && moment(temp.announcement,'DD-MM-YYYY').format('YYYY-MM-DD');
+                        temp.record = moment(temp.record,'DD-MM-YYYY').isValid() && moment(temp.record,'DD-MM-YYYY').format('YYYY-MM-DD')
+                        temp.ex_bonus = moment(temp.ex_bonus,'DD-MM-YYYY').isValid() && moment(temp.ex_bonus,'DD-MM-YYYY').format('YYYY-MM-DD');
+                        newData.push(temp);
+                    });
+                });
+                return cb(null, newData);
+            });
+        });
     });
 }
 
 function fetchAndInsertForYear(year, cb){
+    debugFlow('fetchAndInsertForYear');
     Async.waterfall([
 	Async.constant(year),
 	fetchBonus,
 	insertToBonusTable
-    ],cb);
+    ],function (err){
+	return cb(err);
+    });
 }
 
 function fetAndInsertForAllYears(cb){
+    debugFlow('fetAndInsertForAllYears');
     var years= [];
     for(i=1986;i<2017;i++){
 	years.push(i);
     }
-    Async.eachLimit(years,9,function (year,lcb){
-	fetchAndInsertForYear(year,lcb);
+    Async.eachLimit(years,10,function cb12(year, lcb) {
+        debugFlow('cb12');
+        fetchAndInsertForYear(year,lcb);
     },cb);
 }
 
-(function(){
+((function cb13() {
+    debugFlow('cb13');
     if(require.main==module){	
-	fetAndInsertForAllYears(2011,function (err){
-	    console.log(arguments,'alldone');
+	fetAndInsertForAllYears(function cb14(err) {
+            debugFlow('cb14');
+            console.log(arguments,'alldone');
 	});
     }
-})();
+}))();

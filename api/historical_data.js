@@ -2,8 +2,8 @@ var Async = require('async');
 var Util = require('util');
 var request = require('request');
 var RateLimiter = require('limiter').RateLimiter;
-var Limiter = new RateLimiter(5,'sec'); // limiting to 100 requests per sec
-var SqlLimiter = new RateLimiter(2,'sec'); // limiting to 50 requests per sec
+var Limiter = new RateLimiter(50,'sec'); // limiting to 100 requests per sec
+var SqlLimiter = new RateLimiter(20,'sec'); // limiting to 50 requests per sec
 
 var htmlparser = require('htmlparser2');
 var xpath = require('xpath');
@@ -204,8 +204,8 @@ module.exports=HistoricalData;
     if(require.main==module){
 	var options={
 	    symbol:'pnb',
-	    fromDate:'30-11-2016',
-	    toDate:'01-12-2016',
+	    fromDate:'08-12-2016',
+	    toDate:'09-12-2016',
 	    days:364
 	}
 	getAndInsertHistDataForAllStocks(options,function (err,result){

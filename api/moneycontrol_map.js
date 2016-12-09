@@ -8,7 +8,6 @@ var Path = require('path');
 var HistoricalDataApi = require('./historical_data');
 var NseGetQuoteModel = require('../model/nse_get_quote');
 var Symbols = require('../config/symbols');
-var MoneyControlModel = require('../model/money_control');
 
 var MoneyControlApi = {
     getMoneyControlSymbol : function(symbol,cb) {
@@ -99,8 +98,8 @@ var MoneyControlApi = {
 }
 
 function insertToTable(cb){
-    var symbols=[ 'ATNINTER','BIRLACABLE','CUPID','ENDURANCE','FCONSUMER','GNA','HPL','ICICIPRULI','IDFNIFTYET','KREBSBIO','LTTS','MARATHON','MASKINVEST','MAZDA','REL100NAV','RELBANKNAV','RELCONSNAV','RELDIVNAV','RELGOLDNAV','RELNV20NAV','RENIFTYNAV','SABEVENTS','SPECTACLE','TVVISION' ]
-;
+    var symbols=Symbols;
+
     Async.mapLimit(symbols,500,function (symbol,callback){	
 	MoneyControlApi.getMoneyControlSymbol(symbol,function (err,returnOpts){
 	    var returnData={symbol:symbol}
