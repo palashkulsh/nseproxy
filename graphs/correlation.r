@@ -55,7 +55,7 @@ query<-sprintf("select sd1.date,sd1.average_price as sd1_price,sd2.average_price
 print(query);		     
 f<-dbSendQuery(con,query);
 data<-fetch(f,n=-1);#n=-1 fetches all pending records
-return( ccf(data$sd1_price,data$sd2_price));			    
+return( ccf(data$sd1_price,data$sd2_price,plot=FALSE));
 }
 
 
@@ -163,4 +163,13 @@ return(data$symbol);
 predictivePlot <- function (interval=10,filename='default.pdf',afterdate=NULL){
 data<-predictiveData(interval)
 plotManySimultaneously(data,filename=filename,afterdate = afterdate)
+}
+
+remove_outliers <- function(x, na.rm = TRUE, ...) {
+  qnt <- quantile(x, probs=c(.5, .95), na.rm = na.rm, ...)
+  H <- 1.5 * IQR(x, na.rm = na.rm)
+  y <- x
+  y[x < (qnt[1] - H)] <- NA
+  y[x > (qnt[2] + H)] <- NA
+  y
 }

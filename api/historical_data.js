@@ -204,7 +204,7 @@ module.exports=HistoricalData;
     if(require.main==module){
 	var options={
 	    symbol:'pnb',
-	    fromDate:'08-12-2016',
+	    fromDate:'07-12-2016',
 	    toDate:'09-12-2016',
 	    days:364
 	}

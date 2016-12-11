@@ -47,3 +47,19 @@ select symbol,max(average_price) as 52h,strvalformax(average_price,date) as 52hd
 
 sector wise holdings of stocks
 select * from holdings where symbol in (select symbol from symbol_mc_map where industry=7);
+
+->dividend details of companies over the years
+select symbol ,type, count(1),group_concat(year(announcement)),group_concat(value_pcent) from dividend where symbol='vadilalind' group by symbol, type order by count(1);
+
+
+--> dividend yield of the companies
+select f.symbol,f.year,f.key_text,f.value,sd.average_price, f.value/sd.average_price*100 as div_yield from fin f inner join stock_data sd on sd.symbol=f.symbol where f.year=2016 and f.key_text='Dividend / Share(Rs.)' and sd.date='2016-03-01' and sd.series='EQ' order by f.value/sd.average_price*100 ;
+
+--> month wise distribution of dividend announcement dates
+select month(announcement),count(1) from dividend group by month(announcement) ;
+
+--> sector wise bonus giving diistribution
+select month(announcement),count(1) from dividend group by month(announcement) ;
+
+--> sector wise dividend giving distribution
+select industry,count(1),smm.name from dividend b inner join symbol_mc_map smm on b.symbol=smm.symbol group by industry order by count(1);
