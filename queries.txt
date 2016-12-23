@@ -63,3 +63,19 @@ select month(announcement),count(1) from dividend group by month(announcement) ;
 
 --> sector wise dividend giving distribution
 select industry,count(1),smm.name from dividend b inner join symbol_mc_map smm on b.symbol=smm.symbol group by industry order by count(1);
+
+--> day wise distribution of ups and down and no change of all dates
+select dayofweek(date),dayname(date),count(case when close_price-open_price>0 then 1 end) as upcount,count(case when close_price-open_price<0 then 1 end) as downcount,count(case when close_price-open_price=0 then 1 end) as nochange from stock_data group by dayname(date) order by dayofweek(date)
+
++-----------------+---------------+---------+-----------+----------+
+| dayofweek(date) | dayname(date) | upcount | downcount | nochange |
++-----------------+---------------+---------+-----------+----------+
+|               1 | Sunday        |    1561 |      1556 |      331 |
+|               2 | Monday        |  346332 |    414990 |    50724 |
+|               3 | Tuesday       |  337064 |    428847 |    51420 |
+|               4 | Wednesday     |  344426 |    416818 |    51807 |
+|               5 | Thursday      |  329200 |    424006 |    51718 |
+|               6 | Friday        |  331241 |    417896 |    49447 |
+|               7 | Saturday      |    7632 |      6949 |     1347 |
++-----------------+---------------+---------+-----------+----------+
+7 rows in set (16.37 sec)
