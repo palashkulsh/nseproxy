@@ -1,3 +1,4 @@
+
 var Async = require('async');
 var Util = require('util');
 var request = require('request');
@@ -204,8 +205,8 @@ module.exports=HistoricalData;
     if(require.main==module){
 	var options={
 	    symbol:'pnb',
-	    fromDate:'11-12-2016',
-	    toDate:'19-12-2016',
+	    fromDate:'05-01-2017',
+	    toDate:'08-01-2017',
 	    days:364
 	}
 	getAndInsertHistDataForAllStocks(options,function (err,result){

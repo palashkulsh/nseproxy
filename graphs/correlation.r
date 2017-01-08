@@ -6,7 +6,7 @@ library(gcookbook)
 #plotting a single graph
 
 singleConnect<-function(){
-    return( dbConnect(MySQL(),user="stocks_user",password="stocks_pass",db_name="stocks",host="127.0.0.1"));
+    return( dbConnect(MySQL(),user="stocks_user",password="stocks_pass",db_name="stocks",host="localhost"));
 }
 
 findDataForSymbol<- function(symbol1,afterdate=NULL){
@@ -58,8 +58,35 @@ findCrossCorrelation<- function(symbol1,symbol2){
     print(query);		     
     f<-dbSendQuery(con,query);
     data<-fetch(f,n=-1);#n=-1 fetches all pending records
-    return( ccf(data$sd1_price,data$sd2_price,plot=FALSE));
+    if(is.null(data) || nrow(data)==0){
+	return(NULL);
+    }
+    return( ccf(data$sd1_price,data$sd2_price,plot=TRUE,lag.max=50));
 }
+
+findPairwiseCrossCorrelation<-function(){
+    symbols<-findAllSymbols();
+    symbols<-symbols$symbol
+    #corMat<-data.frame(row.names=symbols)
+    for(s1 in 1:length(symbols)){
+            for(s2 in s1:length(symbols)){
+	    	   if(symbols[s2]<=symbols[s1]){
+			next;
+		   }
+                    corData<-findCrossCorrelation(symbols[s1],symbols[s2]);
+		    if(is.null(corData)){
+			next;
+		    }
+		    corData$acf[,1,1]=round(corData$acf[,1,1],digit=2);			
+                    str<-sprintf("%s,%s,%s",symbols[s1],symbols[s2],paste(corData$acf[,1,1],collapse=","));
+                    #print(str);	      
+                    write(str,file="crosscorrelation.csv",append=TRUE)
+                    #corMat[symbols[s1],symbols[s2]]<-corData; #corResult;
+            }       
+}
+#return (corMat)    ;
+}
+
 
 
 findAllSymbols<- function(){
@@ -76,17 +103,17 @@ findAllSymbols<- function(){
 findPairwiseCorrelation<-function(){
     symbols<-findAllSymbols();
     symbols<-symbols$symbol
-    corMat<-data.frame(row.names=symbols)
+    #corMat<-data.frame(row.names=symbols)
     for(s1 in 1:length(symbols)){
             for(s2 in s1:length(symbols)){
                     corData<-findCorrelation(symbols[s1],symbols[s2]);
                     str<-sprintf("%s,%s,%s",symbols[s1],symbols[s2],corData);
                     print(str);	      
                     write(str,file="correlation.csv",append=TRUE)
-                    corMat[symbols[s1],symbols[s2]]<-corData; #corResult;
+                    #corMat[symbols[s1],symbols[s2]]<-corData; #corResult;
             }       
 }
-return (corMat)    ;
+#return (corMat)    ;
 }
 
 findCorrelationWithAll<-function(symbol,symbols){
