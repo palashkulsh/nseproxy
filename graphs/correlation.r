@@ -29,7 +29,8 @@ findPriceAndMovAvgForSymbol <- function (symbol1,afterdate=NULL,duration=50){
     query<-sprintf("select sd.date,sd.close_price,ta_ema(sdmov.close_price,%s) as ema from stock_data sd inner join stock_data as sdmov on sd.date=sdmov.date and sd.symbol=sdmov.symbol and sd.series=sdmov.series where sd.symbol='%s' and sd.series='EQ'",duration,symbol1)
     if(!is.null(afterdate)){
             query<-sprintf("%s and sd.date>'%s' ",query,afterdate);
-    }		       
+    }
+    query<- sprintf("%s order by date",query); #because unordered entries were creating spikes
 f<-dbSendQuery(con,query);
     data<-fetch(f,n=-1);#n=-1 fetches all pending records
     data$date<-as.Date(data$date);	      
@@ -38,13 +39,14 @@ f<-dbSendQuery(con,query);
 
 #plots the moving avg of diff from average
 findDiffFromAvg <- function (symbol1,afterdate=NULL,duration=50){
+    if(is.null(afterdate)){
+	afterdate<-'2000-01-01';
+    }
     con <- singleConnect();
     on.exit(dbDisconnect(con));
     dbSendQuery(con,'use stocks');
-    query<-sprintf("select date,close_price,ema,ta_sma(diff,50) as diff from (select sd.date,sd.close_price,ta_sma(sdmov.close_price,%s) as ema,sd.close_price-ta_ema(sdmov.close_price,50) as diff from stock_data sd inner join stock_data as sdmov on sd.date=sdmov.date and sd.symbol=sdmov.symbol and sd.series=sdmov.series where sd.symbol='%s' and sd.series='EQ')tbl;",duration,symbol1)
-    if(!is.null(afterdate)){
-            query<-sprintf("%s and sd.date>'%s' ",query,afterdate);
-    }		       
+    query<-sprintf("select date,close_price,ema,ta_sma(diff,50) as diff from (select sd.date,sd.close_price,ta_sma(sdmov.close_price,%s) as ema,sd.close_price-ta_ema(sdmov.close_price,50) as diff from stock_data sd inner join stock_data as sdmov on sd.date=sdmov.date and sd.symbol=sdmov.symbol and sd.series=sdmov.series where sd.symbol='%s' and sd.series='EQ' and sd.date>'%s' order by date)tbl ",duration,symbol1,afterdate)
+    print(query)
     f<-dbSendQuery(con,query);
     data<-fetch(f,n=-1);#n=-1 fetches all pending records
     data$date<-as.Date(data$date);	      
