@@ -22,6 +22,36 @@ f<-dbSendQuery(con,query);
     return(data);			  
 }
 
+findPriceAndMovAvgForSymbol <- function (symbol1,afterdate=NULL,duration=50){
+    con <- singleConnect();
+    on.exit(dbDisconnect(con));
+    dbSendQuery(con,'use stocks');
+    query<-sprintf("select sd.date,sd.close_price,ta_ema(sdmov.close_price,%s) as ema from stock_data sd inner join stock_data as sdmov on sd.date=sdmov.date and sd.symbol=sdmov.symbol and sd.series=sdmov.series where sd.symbol='%s' and sd.series='EQ'",duration,symbol1)
+    if(!is.null(afterdate)){
+            query<-sprintf("%s and sd.date>'%s' ",query,afterdate);
+    }		       
+f<-dbSendQuery(con,query);
+    data<-fetch(f,n=-1);#n=-1 fetches all pending records
+    data$date<-as.Date(data$date);	      
+    return(data);			    			    
+}
+
+#plots the moving avg of diff from average
+findDiffFromAvg <- function (symbol1,afterdate=NULL,duration=50){
+    con <- singleConnect();
+    on.exit(dbDisconnect(con));
+    dbSendQuery(con,'use stocks');
+    query<-sprintf("select date,close_price,ema,ta_sma(diff,50) as diff from (select sd.date,sd.close_price,ta_sma(sdmov.close_price,%s) as ema,sd.close_price-ta_ema(sdmov.close_price,50) as diff from stock_data sd inner join stock_data as sdmov on sd.date=sdmov.date and sd.symbol=sdmov.symbol and sd.series=sdmov.series where sd.symbol='%s' and sd.series='EQ')tbl;",duration,symbol1)
+    if(!is.null(afterdate)){
+            query<-sprintf("%s and sd.date>'%s' ",query,afterdate);
+    }		       
+    f<-dbSendQuery(con,query);
+    data<-fetch(f,n=-1);#n=-1 fetches all pending records
+    data$date<-as.Date(data$date);	      
+    return(data);			    			    
+
+}
+
 findCorrelation<- function(symbol1,symbol2){
     con <- singleConnect();
     on.exit(dbDisconnect(con));
@@ -165,6 +195,21 @@ plotSimultaneously<-function (symbol1,symbol2,afterdate=NULL){
     ggplot(pairWiseData,aes(date,sd1_price))+geom_line(aes(color=symbol1))+geom_line(data=pairWiseData,aes(date,sd2_price,color=symbol2))+geom_line(data=pairWiseData,aes(date,(sd2_price-sd1_price)/((sd2_price+sd1_price)/2),color='change'))+scale_colour_manual("",breaks = c(symbol1, symbol2,'change'), values = c("red", "brown",'black'))
 }
 
+plotPriceAndAvg<-function (symbol1,afterdate=NULL,duration=50){
+    pairWiseData<-findPriceAndMovAvgForSymbol(symbol1,afterdate=afterdate,duration=duration)
+    pairWiseData<-na.omit(pairWiseData);
+    ggplot(pairWiseData,aes(date,close_price))+geom_line(aes(color=symbol1))+geom_line(data=pairWiseData,aes(date,ema,color='ema'))+geom_line(data=pairWiseData,aes(date,(ema-close_price)/((ema+close_price)/2),color='change'))+scale_colour_manual("",breaks = c(symbol1, 'ema','change'), values = c("red", "brown",'black'))
+}
+
+plotDiffFromAvg <- function (symbol1,afterdate=NULL,duration=50){
+    pairWiseData<- findDiffFromAvg(symbol1,afterdate=afterdate,duration=duration)
+    pairWiseData<-na.omit(pairWiseData);				
+    p<-ggplot(pairWiseData,aes(x=date,y=diff,colour=symbol1))+geom_line()+scale_colour_manual("",breaks=c(symbol1),values=c("red"))
+    p<-p+ggtitle(symbol1)+theme_bw()
+    return(p)    
+
+}
+
 plotSingle<-function (symbol1, afterdate=NULL){
     data<-findDataForSymbol(symbol1,afterdate)
     data$date<-as.Date(data$date);
@@ -203,4 +248,39 @@ remove_outliers <- function(x, na.rm = TRUE, ...) {
     y[x < (qnt[1] - H)] <- NA
     y[x > (qnt[2] + H)] <- NA
     y
+}
+
+
+#df is list
+
+remove_outliers_from_list <- function(x,key, na.rm = TRUE, ...) {
+    qnt <- quantile(x[[key]], probs=c(.5, .95), na.rm = na.rm, ...)
+    H <- 1.5 * IQR(x[[key]], na.rm = na.rm)
+    y <- x
+    y[, key] <- apply(X[, c(1,3,5)], 2, function(x) ifelse(x < 0.1, 0, x))
+    y[key]<-ifelse(y[key]<(qnt[1]-H),NA,y[key]);
+    y[key]<-ifelse(y[key]<(qnt[2]+H),NA,y[key]);
+    return(y);
+}
+
+getVolatility<- function(symbol,duration=5,afterdate=NULL){
+    con <- singleConnect();
+    on.exit(dbDisconnect(con));
+    dbSendQuery(con,'use stocks');
+    query<-sprintf("select date,ta_stddevp(average_price,%s) as volatility from stock_data sd where symbol='%s' and series='EQ'",duration,symbol)
+    if(!is.null(afterdate)){
+            query<-sprintf("%s and sd.date>'%s' ",query,afterdate);
+    }		       
+f<-dbSendQuery(con,query);
+    data<-fetch(f,n=-1);#n=-1 fetches all pending records
+    return(data);			  
+}
+
+plotVolatility<- function(symbol,duration=5,afterdate=NULL){
+    data<-getVolatility(symbol,duration,afterdate)
+    data<-na.omit(data);
+    data$date<-as.Date(data$date);
+    p<-ggplot(data,aes(x=date,y=volatility,colour=symbol))+geom_line()+scale_colour_manual("",breaks=c(symbol),values=c("red"))
+    p<-p+ggtitle(symbol)+theme_bw()
+    return(p)    
 }

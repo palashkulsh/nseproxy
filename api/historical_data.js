@@ -1,9 +1,8 @@
-
 var Async = require('async');
 var Util = require('util');
 var request = require('request');
 var RateLimiter = require('limiter').RateLimiter;
-var Limiter = new RateLimiter(50,'sec'); // limiting to 100 requests per sec
+var Limiter = new RateLimiter(5,'sec'); // limiting to 100 requests per sec
 var SqlLimiter = new RateLimiter(20,'sec'); // limiting to 50 requests per sec
 
 var htmlparser = require('htmlparser2');
@@ -14,6 +13,8 @@ var StockDataApi = require('../model/stock_data');
 var DateUtils = require('../lib/date_utils');
 var debug = require('debug')('api.historical_data');
 var Constants = require('../config/constants');
+var SYMBOL_LIMIT = 100;
+var RANGE_LIMIT = 10;
 
 function httpsHandler(err, response, body, cb) {
     if(err){
@@ -140,7 +141,7 @@ function getAndInsertHistoricalDataOverDateRange (options,cb){
     ranges.forEach(function (r){
 	r.symbol = options.symbol;
     });
-    Async.eachLimit(ranges,100,Async.ensureAsync(getAndInsertHistoricalData),function (err,result){
+    Async.eachLimit(ranges, RANGE_LIMIT,Async.ensureAsync(getAndInsertHistoricalData),function (err,result){
 	if(err){
 	    Util.log(err);
 	}
@@ -187,7 +188,7 @@ function getAndInsertHistDataForAllStocks(options,callback){
 	temp.days = options.days;
 	allOpts.push(temp);
     });
-    Async.eachLimit(allOpts,100,function (eachOpt,cb){
+    Async.eachLimit(allOpts,SYMBOL_LIMIT,function (eachOpt,cb){
 	debug('processing '+eachOpt.symbol);
 	getAndInsertHistoricalDataOverDateRange(eachOpt,cb);	
     },function (err){
@@ -205,8 +206,8 @@ module.exports=HistoricalData;
     if(require.main==module){
 	var options={
 	    symbol:'pnb',
-	    fromDate:'05-01-2017',
-	    toDate:'08-01-2017',
+	    fromDate:'05-04-2017',
+	    toDate:'06-04-2017',
 	    days:364
 	}
 	getAndInsertHistDataForAllStocks(options,function (err,result){
