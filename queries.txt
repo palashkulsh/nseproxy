@@ -110,6 +110,8 @@ select * from fin where key_text='PBDIT Margin (%)' and year=2016 order by value
 ----> dividend yield of stocks as per date and prev dividends
 select fin.symbol,fin.key_text,fin.value,sd.close_price,fin.value/sd.close_price*100 as div_yield from fin inner join stock_data sd on sd.symbol=fin.symbol and sd.date='2017-03-31' where replace(key_text," ","")='Dividend/Share(Rs.)' and year=2016 and sd.series='eq' order by fin.value/sd.close_price*100 ;
 
+--> profit yield of companies
+select fin.symbol,fin.key_text,fin.value,sd.close_price,fin.value/sd.close_price*100 as div_yield from fin inner join stock_data sd on sd.symbol=fin.symbol and sd.date='2017-04-20' where replace(key_text," ","")='PBT/Share(Rs.)' and year=2016 and sd.series='eq' order by fin.value/sd.close_price*100 ;
 --> stocks below book value
 select fin.symbol,fin.key_text,fin.value,sd.close_price from fin inner join stock_data sd on sd.symbol=fin.symbol and sd.date='2017-03-31' where replace(key_text," ","")='BookValue[ExclRevalReserve]/Share(Rs.)' and year=2016 and sd.series='eq' and sd.close_price<fin.value ;
 
@@ -122,3 +124,22 @@ select fin.symbol,fin.key_text,fin.value,sd.close_price,fin.value/sd.close_price
 
 --> avg volatility of a stock in a period
 select symbol,avg(ta_stddevp(close_price,7)) from stock_data where date  between date_sub(curdate(),interval 50 day) and curdate() group by symbol order by  avg(ta_stddevp(close_price,7)) ;
+
+
+--increasing bookvalues
+select symbol,y2016,y2015,y2014,y2013,y2012,y2011,y2010,y2009,y2008,y2007 from (select distinct f.symbol,f16.value as y2016,f15.value as y2015,f14.value as y2014,f13.value as y2013,f12.value as y2012,f11.value as y2011,f10.value as y2010 , f09.value as y2009,f08.value as y2008,f07.value as y2007,f06.value as y2006,f05.value as y2005,f04.value as y2004 from fin as f left outer join fin as f16 on f.symbol=f16.symbol and f.key_text=f16.key_text and f16.year=2016 left outer join fin as f15 on f.symbol=f15.symbol and f.key_text=f15.key_text and f15.year=2015 left outer join fin as f14 on f.symbol=f14.symbol and f.key_text=f14.key_text and f14.year=2014 left outer join fin as f13 on f.symbol=f13.symbol and f.key_text=f13.key_text and f13.year=2013  left outer join fin as f12 on f.symbol=f12.symbol and f.key_text=f12.key_text and f12.year=2012 left outer join fin as f11 on f.symbol=f11.symbol and f.key_text=f11.key_text and f11.year=2011  left outer join fin as f10 on f.symbol=f10.symbol and f.key_text=f10.key_text and f10.year=2010 left outer join fin as f09 on f.symbol=f09.symbol and f.key_text=f09.key_text and f09.year=2009 left outer join fin as f08 on f.symbol=f08.symbol and f.key_text=f08.key_text and f08.year=2008 left outer join fin as f07 on f.symbol=f07.symbol and f.key_text=f07.key_text and f07.year=2007 left outer join fin as f06 on f.symbol=f06.symbol and f.key_text=f06.key_text and f06.year=2006 left outer join fin as f05 on f.symbol=f05.symbol and f.key_text=f05.key_text and f05.year=2005 left outer join fin as f04 on f.symbol=f04.symbol and f.key_text=f04.key_text and f04.year=2004   where replace(replace(f.key_text," ",""),".","")='BookValue[ExclRevalReserve]/Share(Rs)' and f16.value>0 and f15.value>0 and f14.value>0 and f13.value>0 and f16.value is not null and f15.value is not null order by f16.value  is not null)tbl where  (y2016-y2015)/y2015*100>15 and (y2015-y2014)/y2014*100>15 and (y2014-y2013)/y2013*100>15;
+
+
+-- stock data with date wise bookvalue
+
+
+
+
+--- high low open close percentage change for stocks in a week
+select symbol,max(oc),min(oc),max(hl),min(hl),avg(oc) from  (select symbol,(close_price-open_price)/open_price*100 as oc,(high_price-low_price)/low_price*100 as hl from stock_data where date between date_sub(curdate(),interval 1 week) and curdate() order by (close_price-open_price)/open_price*100 )tbl group by symbol order by avg(oc);
+
+
+--stocks with diff from moving avg  near 0 and positive slope
+select date,close_price,ema,ta_slope(diff,50) as diff from (select sd.date,sd.close_price,ta_sma(sdmov.close_price,50) as ema,sd.close_price-ta_ema(sdmov.close_price,50) as diff from stock_data sd inner join stock_data as sdmov on sd.date=sdmov.date and sd.symbol=sdmov.symbol and sd.series=sdmov.series where sd.symbol='vadilalind' and sd.series='EQ' and sd.date>'2012-01-01' order by date)tbl 
+
+

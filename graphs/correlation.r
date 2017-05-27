@@ -9,16 +9,41 @@ singleConnect<-function(){
     return( dbConnect(MySQL(),user="stocks_user",password="stocks_pass",db_name="stocks",host="localhost"));
 }
 
-findDataForSymbol<- function(symbol1,afterdate=NULL){
+findStocksBelowBookValue<- function(ondate=format(Sys.time(), "%Y-%m-%d")){
     con <- singleConnect();
     on.exit(dbDisconnect(con));
     dbSendQuery(con,'use stocks');
-    query<-sprintf("select * from stock_data sd where symbol='%s' and series='EQ'",symbol1)
+    query<-sprintf("select fin.symbol as symbol,fin.key_text,fin.value as bookvalue,sd.close_price as lastclose from fin inner join stock_data sd on sd.symbol=fin.symbol and sd.date='%s' where replace(replace(key_text,' ',''),'.','')='BookValue[ExclRevalReserve]/Share(Rs)' and year=year(now())-1 and sd.series='eq' and sd.close_price<fin.value ",ondate)
+    f<-dbSendQuery(con,query);  
+    data<-fetch(f,n=-1);#n=-1 fetches all pending records
+    na.omit(data);
+    return(data);			  			   
+}
+
+findDataForSymbolWithBookValue<- function(symbol1,afterdate=NULL){
+    con <- singleConnect();
+    on.exit(dbDisconnect(con));
+    dbSendQuery(con,'use stocks');
+    query<-sprintf("select * from fin right outer join stock_data sd on sd.symbol=fin.symbol  and year=year(sd.date) where replace(replace(key_text,' ',''),'.','')    ='BookValue[ExclRevalReserve]/Share(Rs)' and sd.series='eq' and fin.symbol='%s' order by date ",symbol1)
     if(!is.null(afterdate)){
             query<-sprintf("%s and sd.date>'%s' ",query,afterdate);
     }		       
 f<-dbSendQuery(con,query);
     data<-fetch(f,n=-1);#n=-1 fetches all pending records
+    return(data);			  
+}
+
+findDataForSymbol<- function(symbol1,afterdate=NULL){
+    con <- singleConnect();
+    on.exit(dbDisconnect(con));
+    dbSendQuery(con,'use stocks');
+    query<-sprintf("select *  from stock_data sd where symbol='%s' and series='EQ' order by date",symbol1)
+    if(!is.null(afterdate)){
+            query<-sprintf("%s and sd.date>'%s' ",query,afterdate);
+    }		       
+f<-dbSendQuery(con,query);
+    data<-fetch(f,n=-1);#n=-1 fetches all pending records
+    na.omit(data);
     return(data);			  
 }
 
@@ -38,21 +63,21 @@ f<-dbSendQuery(con,query);
 }
 
 #plots the moving avg of diff from average
-findDiffFromAvg <- function (symbol1,afterdate=NULL,duration=50){
+findDiffFromAvg <- function (symbol1,afterdate=NULL,duration=50,smatime=50){
     if(is.null(afterdate)){
 	afterdate<-'2000-01-01';
     }
     con <- singleConnect();
     on.exit(dbDisconnect(con));
     dbSendQuery(con,'use stocks');
-    query<-sprintf("select date,close_price,ema,ta_sma(diff,50) as diff from (select sd.date,sd.close_price,ta_sma(sdmov.close_price,%s) as ema,sd.close_price-ta_ema(sdmov.close_price,50) as diff from stock_data sd inner join stock_data as sdmov on sd.date=sdmov.date and sd.symbol=sdmov.symbol and sd.series=sdmov.series where sd.symbol='%s' and sd.series='EQ' and sd.date>'%s' order by date)tbl ",duration,symbol1,afterdate)
+    query<-sprintf("select date,close_price,ema,ta_sma(diff,%s) as diff from (select sd.date,sd.close_price,ta_sma(sdmov.close_price,%s) as ema,sd.close_price-ta_ema(sdmov.close_price,50) as diff from stock_data sd inner join stock_data as sdmov on sd.date=sdmov.date and sd.symbol=sdmov.symbol and sd.series=sdmov.series where sd.symbol='%s' and sd.series='EQ' and sd.date>'%s' order by date)tbl ",smatime,duration,symbol1,afterdate)
     print(query)
     f<-dbSendQuery(con,query);
     data<-fetch(f,n=-1);#n=-1 fetches all pending records
     data$date<-as.Date(data$date);	      
     return(data);			    			    
-
 }
+
 
 findCorrelation<- function(symbol1,symbol2){
     con <- singleConnect();
@@ -203,13 +228,12 @@ plotPriceAndAvg<-function (symbol1,afterdate=NULL,duration=50){
     ggplot(pairWiseData,aes(date,close_price))+geom_line(aes(color=symbol1))+geom_line(data=pairWiseData,aes(date,ema,color='ema'))+geom_line(data=pairWiseData,aes(date,(ema-close_price)/((ema+close_price)/2),color='change'))+scale_colour_manual("",breaks = c(symbol1, 'ema','change'), values = c("red", "brown",'black'))
 }
 
-plotDiffFromAvg <- function (symbol1,afterdate=NULL,duration=50){
-    pairWiseData<- findDiffFromAvg(symbol1,afterdate=afterdate,duration=duration)
+plotDiffFromAvg <- function (symbol1,afterdate=NULL,duration=50,smatime=50){
+    pairWiseData<- findDiffFromAvg(symbol1,afterdate=afterdate,duration=duration,smatime=smatime)
     pairWiseData<-na.omit(pairWiseData);				
     p<-ggplot(pairWiseData,aes(x=date,y=diff,colour=symbol1))+geom_line()+scale_colour_manual("",breaks=c(symbol1),values=c("red"))
     p<-p+ggtitle(symbol1)+theme_bw()
     return(p)    
-
 }
 
 plotSingle<-function (symbol1, afterdate=NULL){
@@ -220,10 +244,29 @@ plotSingle<-function (symbol1, afterdate=NULL){
     return(p)    
 }
 
-plotManySimultaneously <- function (symbols,afterdate=NULL,filename="default.pdf"){
+plotSingleWithValue<- function(symbol1,afterdate=NULL){
+    data<-findDataForSymbolWithBookValue(symbol1,afterdate)
+    if(!length(data$date)){
+	return();
+    }
+    data$date<-as.Date(data$date);
+    p<-ggplot(data=data,aes(date,average_price))+geom_line(aes(color=symbol1))+geom_line(data=data,aes(date,value))+geom_line(aes(color='bookvalue'))+scale_colour_manual("",breaks = c(symbol1, 'bookvalue'), values = c("red", "brown"))    		      
+    return(p);
+}
+
+plotVolumeSingle<-function (symbol1, afterdate=NULL){
+    data<-findDataForSymbol(symbol1,afterdate)
+    data$date<-as.Date(data$date);
+    p<-ggplot(data,aes(x=date,y=percent_dly_qt_to_traded_qty,colour=symbol1))+geom_line()+scale_colour_manual("",breaks=c(symbol1),values=c("red"))
+    p<-p+ggtitle(symbol1)+theme_bw()
+    return(p)    
+}
+
+plotManySimultaneously <- function (symbols,afterdate=NULL,filename="default.pdf",functor=plotSingle){
     pdf(filename)
     for(s in 1:length(symbols)){
-            print(plotSingle(symbols[s],afterdate))      
+    	    print(symbols[s])
+            print(functor(symbols[s],afterdate))      
     }		       
 dev.off()
 }
@@ -285,4 +328,51 @@ plotVolatility<- function(symbol,duration=5,afterdate=NULL){
     p<-ggplot(data,aes(x=date,y=volatility,colour=symbol))+geom_line()+scale_colour_manual("",breaks=c(symbol),values=c("red"))
     p<-p+ggtitle(symbol)+theme_bw()
     return(p)    
+}
+
+plotAllBelowBookValue <-function(){
+	plotManySimultaneously(findStocksBelowBookValue()$symbol,functor=plotSingleWithValue);
+}
+
+findFinData<- function(symbol){
+    con <- singleConnect();
+    on.exit(dbDisconnect(con));
+    dbSendQuery(con,'use stocks');
+    query<-sprintf("select distinct f.symbol,f.key_text,f16.value as '2016',f15.value as '2015',f14.value as '2014',f13.value as '2013',f12.value as '2012',f11.value as '2011',f10.value as '2010' , f09.value as '2009',f08.value as '2008',f07.value as '2007',f06.value as '2006',f05.value as '2005',f04.value as '2004' from fin as f left outer join fin as f16 on f.symbol=f16.symbol and f.key_text=f16.key_text and f16.year=2016 left outer join fin as f15 on f.symbol=f15.symbol and f.key_text=f15.key_text and f15.year=2015 left outer join fin as f14 on f.symbol=f14.symbol and f.key_text=f14.key_text and f14.year=2014 left outer join fin as f13 on f.symbol=f13.symbol and f.key_text=f13.key_text and f13.year=2013  left outer join fin as f12 on f.symbol=f12.symbol and f.key_text=f12.key_text and f12.year=2012 left outer join fin as f11 on f.symbol=f11.symbol and f.key_text=f11.key_text and f11.year=2011  left outer join fin as f10 on f.symbol=f10.symbol and f.key_text=f10.key_text and f10.year=2010 left outer join fin as f09 on f.symbol=f09.symbol and f.key_text=f09.key_text and f09.year=2009 left outer join fin as f08 on f.symbol=f08.symbol and f.key_text=f08.key_text and f08.year=2008 left outer join fin as f07 on f.symbol=f07.symbol and f.key_text=f07.key_text and f07.year=2007 left outer join fin as f06 on f.symbol=f06.symbol and f.key_text=f06.key_text and f06.year=2006 left outer join fin as f05 on f.symbol=f05.symbol and f.key_text=f05.key_text and f05.year=2005 left outer join fin as f04 on f.symbol=f04.symbol and f.key_text=f04.key_text and f04.year=2004   where f.symbol='%s';",symbol)
+    f<-dbSendQuery(con,query);  
+    data<-fetch(f,n=-1);#n=-1 fetches all pending records
+    na.omit(data);
+    return(data);			  			   
+}
+
+findRawFinData<- function(symbol){
+    con <- singleConnect();
+    on.exit(dbDisconnect(con));
+    dbSendQuery(con,'use stocks');
+    query<-sprintf("select symbol month,year,replace(replace(key_text,' ',''),'.','') as key_text,value From fin where symbol='%s';",symbol)
+    f<-dbSendQuery(con,query);  
+    data<-fetch(f,n=-1);#n=-1 fetches all pending records
+    na.omit(data);
+    return(data);			  			   
+}
+
+findAllNearLow<-function(){
+    con <- singleConnect();
+    on.exit(dbDisconnect(con));
+    dbSendQuery(con,'use stocks');
+    query<-sprintf("select symbol,52l,52ldt,52h,52hdt,lastprice, recovery from (select symbol,52l,52ldt,52h,52hdt,lastprice,(lastprice-52l)/52l*100 as recovery from (select symbol,min(average_price) as 52l,strvalformin(average_price,date) as 52ldt,max(average_price) as 52h,strvalformax(average_price,date) as 52hdt,realvalfordatemax(year(date),month(date),dayofmonth(date),average_price) as lastprice from stock_data force index( `idx_date`) where date between date_sub(curdate(),interval 1 year) and date_sub(curdate(),interval 0 day) and series='EQ' group by symbol having strvalformin(average_price,date) between date_sub(curdate(),interval 7 day) and date_sub(curdate(),interval 0 day))tbl where (lastprice-52l)/52l*100 between 0 and 10)tb order by recovery;")
+    f<-dbSendQuery(con,query);  
+    data<-fetch(f,n=-1);#n=-1 fetches all pending records
+    na.omit(data);
+    return(data);			  			   
+}
+
+plotAllNearLow<-function(){
+	plotManySimultaneously(findAllNearLow()$symbol,functor=plotSingle,filename='near_low.pdf');
+}
+
+plotFinGraph<-function(symbol){
+    data<-findRawFinData(symbol);
+    p<-ggplot(data,aes(year,value))+geom_line()+facet_wrap(~key_text,scales="free");	
+    return(p);
 }

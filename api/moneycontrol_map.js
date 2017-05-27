@@ -6,6 +6,7 @@ var request = require("request");
 var parseString = require('xml2js').parseString;
 var Path = require('path');
 var HistoricalDataApi = require('./historical_data');
+var StockDataApi = require('./stock_data');
 var NseGetQuoteModel = require('../model/nse_get_quote');
 var Symbols = require('../config/symbols');
 
@@ -99,25 +100,29 @@ var MoneyControlApi = {
 
 function insertToTable(cb){
     var symbols=Symbols;
-
-    Async.mapLimit(symbols,500,function (symbol,callback){	
-	MoneyControlApi.getMoneyControlSymbol(symbol,function (err,returnOpts){
-	    var returnData={symbol:symbol}
-	    if(err){
-		returnData.msg='fail';
-		return callback(null,returnData);
-	    }
-	    MoneyControlModel.insert([returnOpts],{},function (err){
+    StockDataApi.getAllSymbols(function (err, symbols){
+	if(err){
+	    return cb(err);
+	}
+	Async.mapLimit(symbols,100,function (symbol,callback){	
+	    MoneyControlApi.getMoneyControlSymbol(symbol,function (err,returnOpts){
+		var returnData={symbol:symbol}
 		if(err){
 		    returnData.msg='fail';
 		    return callback(null,returnData);
 		}
-		returnData.msg='pass'
-		return callback(null,returnData);
+		MoneyControlModel.insert([returnOpts],{},function (err){
+		    if(err){
+			returnData.msg='fail';
+			return callback(null,returnData);
+		    }
+		    returnData.msg='pass'
+		    return callback(null,returnData);
+		});
 	    });
+	},function (err,result){
+	    console.log(result);
 	});
-    },function (err,result){
-	console.log(result);
     });
 }
 
@@ -133,9 +138,9 @@ module.exports= MoneyControlApi;
 	// HistoricalDataApi.getHistoricalData(opts,function (err,result){
 	//     console.log(err,result)
 	// })
-	// MoneyControlApi.getMoneyControlSymbol('NV20IWIN',function (err,result){
-	//     console.log(err,result)
-	// });
-	insertToTable(console.log);
+	MoneyControlApi.getMoneyControlSymbol('STAR',function (err,result){
+	    console.log(err,result)
+	});
+	// insertToTable(console.log);
     }
 })();

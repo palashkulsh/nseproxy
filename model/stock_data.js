@@ -56,6 +56,9 @@ function nseToSystemData(data){
 
 var StockDataModel = {
     table : sqlLib.define(stockDataSchema),
+    get: function (query, cb){
+	sqlLib.exec(query, cb);
+    },
     
     insert: function(data, options, cb){
 	var table=this.table;

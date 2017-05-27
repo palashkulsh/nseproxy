@@ -13,7 +13,7 @@ var StockDataApi = require('../model/stock_data');
 var DateUtils = require('../lib/date_utils');
 var debug = require('debug')('api.historical_data');
 var Constants = require('../config/constants');
-var SYMBOL_LIMIT = 100;
+var SYMBOL_LIMIT = 80;
 var RANGE_LIMIT = 10;
 
 function httpsHandler(err, response, body, cb) {
@@ -97,14 +97,16 @@ function getHistoricalData(options,cb){
     var requestObj={
 	'url' : 'https://www.nseindia.com/products/dynaContent/common/productsSymbolMapping.jsp',
 	'headers': {
-	    'Host': 'www.nseindia.com',
-	    'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:47.0) Gecko/20100101 Firefox/47.0',
-	    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+	    Host: 'nseindia.com',
+	    'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:53.0) Gecko/20100101 Firefox/53.0',
+	    Accept: '*/*',
 	    'Accept-Language': 'en-US,en;q=0.5',
-	    //'Accept-Encoding': 'gzip, deflate, br',
-	    'Cookie': 'pointer=2; sym1=AUSTRAL; pointer_il=1; sym_il1=AUSTRAL; sym2=QUESS; ys-cgdetails=o%3Awidth%3Dn%253A857%5Eheight%3Dn%253A515%5Ex%3Dn%253A116%5Ey%3Dn%253A-78',
-	    'Connection': 'keep-alive',
-	    'Cache-Control': 'max-age=0'
+	    // Accept-Encoding: gzip, deflate, br,
+	    'X-Requested-With': 'XMLHttpRequest',
+	    'Referer': 'https://nseindia.com/products/content/equities/equities/eq_security.htm',
+	    'Cookie': 'ys-gridPanel=o%3Acolumns%3Da%253Ao%25253Aid%25253Ds%2525253Aname%25255Ewidth%25253Dn%2525253A139%255Eo%25253Aid%25253Dn%2525253A1%25255Ewidth%25253Dn%2525253A215%255Eo%25253Aid%25253Dn%2525253A2%25255Ewidth%25253Dn%2525253A215%255Eo%25253Aid%25253Dn%2525253A3%25255Ewidth%25253Dn%2525253A323%255Eo%25253Aid%25253Dn%2525253A4%25255Ewidth%25253Dn%2525253A215%5Esort%3Do%253Afield%253Ds%25253Adate%255Edirection%253Ds%25253ADESC; pointer=1; sym1=ADANIPORTS',
+	    DNT: 1,
+	    Connection: 'keep-alive'	
 	},
 	qs:{
 	    symbol: options.symbol,
@@ -206,8 +208,8 @@ module.exports=HistoricalData;
     if(require.main==module){
 	var options={
 	    symbol:'pnb',
-	    fromDate:'05-04-2017',
-	    toDate:'06-04-2017',
+	    fromDate:'23-05-2017',
+	    toDate:'25-05-2017',
 	    days:364
 	}
 	getAndInsertHistDataForAllStocks(options,function (err,result){
