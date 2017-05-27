@@ -373,6 +373,6 @@ plotAllNearLow<-function(){
 
 plotFinGraph<-function(symbol){
     data<-findRawFinData(symbol);
-    p<-ggplot(data,aes(year,value))+geom_line()+facet_wrap(~key_text,scales="free");	
+    p<-ggplot(data,aes(year,value))+geom_point(color='blue')+geom_line(color='black')+facet_wrap(~key_text,scales="free");
     return(p);
 }
