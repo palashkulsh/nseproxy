@@ -47,6 +47,23 @@ f<-dbSendQuery(con,query);
     return(data);			  
 }
 
+findDataForSymbols<- function(symbols,afterdate=NULL){
+    con <- singleConnect();
+    on.exit(dbDisconnect(con));
+    dbSendQuery(con,'use stocks');   
+    query<-sprintf("select *  from stock_data sd where symbol in (%s) and series='EQ'",paste("'",symbols,"'",sep="",collapse=","))
+    if(!is.null(afterdate)){
+            query<-sprintf("%s and sd.date>'%s' ",query,afterdate);
+    }
+    query<-paste(query,"order by date");		       
+    print(query)
+    f<-dbSendQuery(con,query);
+    data<-fetch(f,n=-1);#n=-1 fetches all pending records
+    data$date<-as.Date(data$date);
+    na.omit(data);
+    return(data);			  
+}
+
 findPriceAndMovAvgForSymbol <- function (symbol1,afterdate=NULL,duration=50){
     con <- singleConnect();
     on.exit(dbDisconnect(con));
@@ -371,8 +388,31 @@ plotAllNearLow<-function(){
 	plotManySimultaneously(findAllNearLow()$symbol,functor=plotSingle,filename='near_low.pdf');
 }
 
-plotFinGraph<-function(symbol){
+plotFinGraph<-function(symbol,afterdate=NULL){
+    #provided afterdate for compatibility with plotManySimultaneously
     data<-findRawFinData(symbol);
-    p<-ggplot(data,aes(year,value))+geom_point(color='blue')+geom_line(color='black')+facet_wrap(~key_text,scales="free");
+    na.omit(data)
+    p<-ggplot(data,aes(year,value))+geom_point(color='blue')+geom_line(color='black')+facet_wrap(~key_text,scales="free",as.table=FALSE,ncol=5)+labs(title=symbol);
     return(p);
+}
+
+plotManyImgSimultaneously <- function (symbols,afterdate=NULL,filename="default.jpg",functor=plotSingle){
+    jpeg(filename)
+    for(s in 1:length(symbols)){
+    	    print(symbols[s])
+            print(functor(symbols[s],afterdate))      
+    }		       
+dev.off()
+}
+
+saveFinGraph <- function (symbol,filename='default.jpg'){
+	     jpeg(filename);
+	     print(plotFinGraph(symbol),width=800);
+	     dev.off()
+}
+
+plotMany <- function(symbols,afterdate=NULL){
+	 data<-findDataForSymbols(symbols,afterdate)
+	 p<- ggplot(data,aes(date,average_price))+geom_line()+facet_grid(symbol~.,scales="free_y")
+	 return(p)
 }
