@@ -9,6 +9,18 @@ singleConnect<-function(){
     return( dbConnect(MySQL(),user="stocks_user",password="stocks_pass",db_name="stocks",host="localhost"));
 }
 
+
+findSymbolForIndustry <- function (industry){
+    con <- singleConnect();
+    on.exit(dbDisconnect(con));
+    dbSendQuery(con,'use stocks');
+    query<-sprintf("select symbol from symbol_mc_map where industry=%s",industry)
+    f<-dbSendQuery(con,query);  
+    data<-fetch(f,n=-1);#n=-1 fetches all pending records
+    na.omit(data);
+    return(data);			  			   
+}
+
 findStocksBelowBookValue<- function(ondate=format(Sys.time(), "%Y-%m-%d")){
     con <- singleConnect();
     on.exit(dbDisconnect(con));
@@ -43,6 +55,7 @@ findDataForSymbol<- function(symbol1,afterdate=NULL){
     }		       
 f<-dbSendQuery(con,query);
     data<-fetch(f,n=-1);#n=-1 fetches all pending records
+    data$date<-as.Date(data$date);
     na.omit(data);
     return(data);			  
 }
@@ -392,7 +405,7 @@ plotFinGraph<-function(symbol,afterdate=NULL){
     #provided afterdate for compatibility with plotManySimultaneously
     data<-findRawFinData(symbol);
     na.omit(data)
-    p<-ggplot(data,aes(year,value))+geom_point(color='blue')+geom_line(color='black')+facet_wrap(~key_text,scales="free",as.table=FALSE,ncol=5)+labs(title=symbol);
+    p<-ggplot(data,aes(year,value))+geom_point(color='blue')+geom_line(color='black')+facet_wrap(~key_text,scales="free")+labs(title=symbol);
     return(p);
 }
 
@@ -415,4 +428,14 @@ plotMany <- function(symbols,afterdate=NULL){
 	 data<-findDataForSymbols(symbols,afterdate)
 	 p<- ggplot(data,aes(date,average_price))+geom_line()+facet_grid(symbol~.,scales="free_y")
 	 return(p)
+}
+
+plotManyWrap <- function(symbols,afterdate=NULL){
+	 data<-findDataForSymbols(symbols,afterdate)
+	 p<- ggplot(data,aes(date,average_price,group=1))+geom_line()+facet_wrap(~symbol,scales="free")+scale_y_continuous(breaks=NULL)+scale_x_date(breaks=NULL)
+	 return(p)
+}
+
+plotIndustry <- function(industry,afterdate=Sys.Date()-31){
+    plotManyWrap(findSymbolForIndustry(industry)$symbol,afterdate=afterdate)    
 }

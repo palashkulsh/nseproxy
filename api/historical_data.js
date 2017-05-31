@@ -208,8 +208,8 @@ module.exports=HistoricalData;
     if(require.main==module){
 	var options={
 	    symbol:'pnb',
-	    fromDate:'23-05-2017',
-	    toDate:'25-05-2017',
+	    fromDate:'29-05-2017',
+	    toDate:'30-05-2017',
 	    days:364
 	}
 	getAndInsertHistDataForAllStocks(options,function (err,result){
