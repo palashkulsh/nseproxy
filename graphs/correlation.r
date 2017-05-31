@@ -93,14 +93,14 @@ f<-dbSendQuery(con,query);
 }
 
 #plots the moving avg of diff from average
-findDiffFromAvg <- function (symbol1,afterdate=NULL,duration=50,smatime=50){
+findDiffFromAvg <- function (symbols,afterdate=NULL,duration=50,smatime=50){
     if(is.null(afterdate)){
 	afterdate<-'2000-01-01';
     }
     con <- singleConnect();
     on.exit(dbDisconnect(con));
     dbSendQuery(con,'use stocks');
-    query<-sprintf("select date,close_price,ema,ta_sma(diff,%s) as diff from (select sd.date,sd.close_price,ta_sma(sdmov.close_price,%s) as ema,sd.close_price-ta_ema(sdmov.close_price,50) as diff from stock_data sd inner join stock_data as sdmov on sd.date=sdmov.date and sd.symbol=sdmov.symbol and sd.series=sdmov.series where sd.symbol='%s' and sd.series='EQ' and sd.date>'%s' order by date)tbl ",smatime,duration,symbol1,afterdate)
+    query<-sprintf("select symbol,date,close_price,ema,ta_sma(diff,%s) as diff from (select sd.symbol,sd.date,sd.close_price,ta_sma(sdmov.close_price,%s) as ema,sd.close_price-ta_ema(sdmov.close_price,50) as diff from stock_data sd inner join stock_data as sdmov on sd.date=sdmov.date and sd.symbol=sdmov.symbol and sd.series=sdmov.series where sd.symbol in (%s) and sd.series='EQ' and sd.date>'%s' order by date)tbl ",smatime,duration,paste("'",symbols,"'",sep="",collapse=","),afterdate)
     print(query)
     f<-dbSendQuery(con,query);
     data<-fetch(f,n=-1);#n=-1 fetches all pending records
@@ -438,4 +438,15 @@ plotManyWrap <- function(symbols,afterdate=NULL){
 
 plotIndustry <- function(industry,afterdate=Sys.Date()-31){
     plotManyWrap(findSymbolForIndustry(industry)$symbol,afterdate=afterdate)    
+}
+
+plotMultiDiffFromAvg <-function(symbols,afterdate=Sys.Date()-200){
+		     data <- findDiffFromAvg(symbols,afterdate=afterdate);
+    pairWiseData<-na.omit(data);				
+    p<-ggplot(pairWiseData,aes(x=date,y=diff))+geom_line()+facet_wrap(~symbol,scales="free")+scale_y_continuous(breaks=c(0))+scale_x_date(breaks=NULL)
+    return(p)    		     
+}
+
+plotIndustryDiffFromAvg <- function (industry,afterdate=Sys.Date()-400){
+			plotMultiDiffFromAvg(findSymbolForIndustry(industry)$symbol,afterdate=afterdate)    
 }
