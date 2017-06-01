@@ -397,8 +397,9 @@ findAllNearLow<-function(){
     return(data);			  			   
 }
 
-plotAllNearLow<-function(){
-	plotManySimultaneously(findAllNearLow()$symbol,functor=plotSingle,filename='near_low.pdf');
+plotAllNearLow<-function(afterdate=Sys.Date()-365){
+	#plotManySimultaneously(findAllNearLow()$symbol,functor=plotSingle,filename='near_low.pdf');
+	plotManyWrap(findAllNearLow()$symbol,afterdate=afterdate)
 }
 
 plotFinGraph<-function(symbol,afterdate=NULL){
