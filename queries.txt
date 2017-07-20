@@ -112,11 +112,14 @@ select fin.symbol,fin.key_text,fin.value,sd.close_price,fin.value/sd.close_price
 
 --> profit yield of companies
 select fin.symbol,fin.key_text,fin.value,sd.close_price,fin.value/sd.close_price*100 as div_yield from fin inner join stock_data sd on sd.symbol=fin.symbol and sd.date='2017-04-20' where replace(key_text," ","")='PBT/Share(Rs.)' and year=2016 and sd.series='eq' order by fin.value/sd.close_price*100 ;
+
 --> stocks below book value
 select fin.symbol,fin.key_text,fin.value,sd.close_price from fin inner join stock_data sd on sd.symbol=fin.symbol and sd.date='2017-03-31' where replace(key_text," ","")='BookValue[ExclRevalReserve]/Share(Rs.)' and year=2016 and sd.series='eq' and sd.close_price<fin.value ;
 
 --> earnings per share > current market price
 select fin.symbol,fin.key_text,fin.value,sd.close_price from fin inner join stock_data sd on sd.symbol=fin.symbol and sd.date='2017-03-31' where replace(key_text," ","")='RevenuefromOperations/Share(Rs.)' and year=2016 and sd.series='eq' and sd.close_price<fin.value order by fin.value-sd.close_price;
+
+select fin.symbol,fin.key_text,fin.value,sd.close_price from fin inner join stock_data sd on sd.symbol=fin.symbol and sd.date='2017-03-31' where replace(key_text," ","")='PBT/Share(Rs.)'` and year=2016 and sd.series='eq' and sd.close_price<fin.value order by fin.value-sd.close_price;
 
 --> net profit yield per sharevalue
 select fin.symbol,fin.key_text,fin.value,sd.close_price,fin.value/sd.close_price*100 as profitpcentperShare from fin inner join stock_data sd on sd.symbol=fin.symbol and sd.date='2017-03-31' where replace(key_text," ","")='NetProfit/Share(Rs.)' and year=2016 and sd.series='eq' order by fin.value/sd.close_price*100;
