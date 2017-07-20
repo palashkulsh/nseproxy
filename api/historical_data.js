@@ -13,8 +13,8 @@ var StockDataApi = require('../model/stock_data');
 var DateUtils = require('../lib/date_utils');
 var debug = require('debug')('api.historical_data');
 var Constants = require('../config/constants');
-var SYMBOL_LIMIT = 80;
-var RANGE_LIMIT = 10;
+var SYMBOL_LIMIT = 10;
+var RANGE_LIMIT = 1;
 
 function httpsHandler(err, response, body, cb) {
     if(err){
@@ -208,8 +208,8 @@ module.exports=HistoricalData;
     if(require.main==module){
 	var options={
 	    symbol:'pnb',
-	    fromDate:'29-05-2017',
-	    toDate:'30-05-2017',
+	    fromDate:'15-07-2017',
+	    toDate:'18-07-2017',
 	    days:364
 	}
 	getAndInsertHistDataForAllStocks(options,function (err,result){

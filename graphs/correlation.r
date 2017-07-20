@@ -9,6 +9,16 @@ singleConnect<-function(){
     return( dbConnect(MySQL(),user="stocks_user",password="stocks_pass",db_name="stocks",host="localhost"));
 }
 
+findAllIndustries<- function (){
+    con <- singleConnect();
+    on.exit(dbDisconnect(con));
+    dbSendQuery(con,'use stocks');
+    query<-sprintf("select distinct industry from symbol_mc_map ")
+    f<-dbSendQuery(con,query);  
+    data<-fetch(f,n=-1);#n=-1 fetches all pending records
+    na.omit(data);
+    return(data);			  			   
+}
 
 findSymbolForIndustry <- function (industry){
     con <- singleConnect();
@@ -39,7 +49,8 @@ findDataForSymbolWithBookValue<- function(symbol1,afterdate=NULL){
     query<-sprintf("select * from fin right outer join stock_data sd on sd.symbol=fin.symbol  and year=year(sd.date) where replace(replace(key_text,' ',''),'.','')    ='BookValue[ExclRevalReserve]/Share(Rs)' and sd.series='eq' and fin.symbol='%s' order by date ",symbol1)
     if(!is.null(afterdate)){
             query<-sprintf("%s and sd.date>'%s' ",query,afterdate);
-    }		       
+    }
+    print(query)
 f<-dbSendQuery(con,query);
     data<-fetch(f,n=-1);#n=-1 fetches all pending records
     return(data);			  
@@ -49,15 +60,34 @@ findDataForSymbol<- function(symbol1,afterdate=NULL){
     con <- singleConnect();
     on.exit(dbDisconnect(con));
     dbSendQuery(con,'use stocks');
-    query<-sprintf("select *  from stock_data sd where symbol='%s' and series='EQ' order by date",symbol1)
+    query<-sprintf("select *  from stock_data sd where symbol='%s' and series='EQ' ",symbol1)
     if(!is.null(afterdate)){
             query<-sprintf("%s and sd.date>'%s' ",query,afterdate);
-    }		       
+    }
+    query<-sprintf("%s order by date",query)
 f<-dbSendQuery(con,query);
+    print(query)
     data<-fetch(f,n=-1);#n=-1 fetches all pending records
     data$date<-as.Date(data$date);
     na.omit(data);
     return(data);			  
+}
+
+findMacdDataForSymbols<- function(symbols,afterdate=NULL){
+    con <- singleConnect();
+    on.exit(dbDisconnect(con));
+    dbSendQuery(con,'use stocks');   
+    query<-sprintf("select symbol,date,ta_ema(close_price,26) - ta_ema(close_price,12) as macd,ta_ema(ta_ema(close_price,26) - ta_ema(close_price,12),9) as sig  from stock_data sd where symbol in (%s) and series='EQ'",paste("'",symbols,"'",sep="",collapse=","))
+    if(!is.null(afterdate)){
+            query<-sprintf("%s and sd.date>'%s' ",query,afterdate);
+    }
+    query<-paste(query,"order by date");		       
+    print(query)
+    f<-dbSendQuery(con,query);
+    data<-fetch(f,n=-1);#n=-1 fetches all pending records
+    data$date<-as.Date(data$date);
+    na.omit(data);
+    return(data);			  			 
 }
 
 findDataForSymbols<- function(symbols,afterdate=NULL){
@@ -375,11 +405,11 @@ findFinData<- function(symbol){
     return(data);			  			   
 }
 
-findRawFinData<- function(symbol){
+findRawFinData<- function(symbol,afteryear=2000){
     con <- singleConnect();
     on.exit(dbDisconnect(con));
     dbSendQuery(con,'use stocks');
-    query<-sprintf("select symbol month,year,replace(replace(key_text,' ',''),'.','') as key_text,value From fin where symbol='%s';",symbol)
+    query<-sprintf("select symbol month,year,replace(replace(key_text,' ',''),'.','') as key_text,value From fin where symbol='%s' and year>%s;",symbol,afteryear)
     f<-dbSendQuery(con,query);  
     data<-fetch(f,n=-1);#n=-1 fetches all pending records
     na.omit(data);
@@ -402,9 +432,9 @@ plotAllNearLow<-function(afterdate=Sys.Date()-365){
 	plotManyWrap(findAllNearLow()$symbol,afterdate=afterdate)
 }
 
-plotFinGraph<-function(symbol,afterdate=NULL){
+plotFinGraph<-function(symbol,afterdate=NULL,afteryear=2000){
     #provided afterdate for compatibility with plotManySimultaneously
-    data<-findRawFinData(symbol);
+    data<-findRawFinData(symbol,afteryear);
     na.omit(data)
     p<-ggplot(data,aes(year,value))+geom_point(color='blue')+geom_line(color='black')+facet_wrap(~key_text,scales="free")+labs(title=symbol);
     return(p);
@@ -431,14 +461,17 @@ plotMany <- function(symbols,afterdate=NULL){
 	 return(p)
 }
 
-plotManyWrap <- function(symbols,afterdate=NULL){
+plotManyWrap <- function(symbols,afterdate=NULL,title=''){
 	 data<-findDataForSymbols(symbols,afterdate)
-	 p<- ggplot(data,aes(date,average_price,group=1))+geom_line()+facet_wrap(~symbol,scales="free")+scale_y_continuous(breaks=NULL)+scale_x_date(breaks=NULL)
+	 p<- ggplot(data,aes(date,average_price,group=1))+geom_line()+facet_wrap(~symbol,scales="free")+scale_y_continuous(breaks=NULL)+scale_x_date(breaks=NULL);
+	 if(!is.null(title)){
+	    p<-p+ggtitle(title);
+	 }
 	 return(p)
 }
 
 plotIndustry <- function(industry,afterdate=Sys.Date()-31){
-    plotManyWrap(findSymbolForIndustry(industry)$symbol,afterdate=afterdate)    
+    plotManyWrap(findSymbolForIndustry(industry)$symbol,afterdate=afterdate,title=industry)    
 }
 
 plotMultiDiffFromAvg <-function(symbols,afterdate=Sys.Date()-200){
@@ -450,4 +483,13 @@ plotMultiDiffFromAvg <-function(symbols,afterdate=Sys.Date()-200){
 
 plotIndustryDiffFromAvg <- function (industry,afterdate=Sys.Date()-400){
 			plotMultiDiffFromAvg(findSymbolForIndustry(industry)$symbol,afterdate=afterdate)    
+}
+
+plotMacd<- function(symbols,afterdate=NULL){
+	data<- findMacdDataForSymbols(symbols,afterdate=afterdate);
+	ggplot(data,aes(date,macd))+geom_line(aes(),color='blue')+geom_line(aes(date,sig),color='magenta')+facet_wrap(~symbol)
+}
+
+plotAllIndustryWise <- function(){
+		    plotManySimultaneously(findAllIndustries()$industry,filename='industry.pdf',afterdate='2017-01-01',functor=plotIndustry)
 }
