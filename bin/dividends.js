@@ -117,7 +117,7 @@ function fetchAndInsertForYear(year, cb){
 
 function fetAndInsertForAllYears(cb){
     var years= [];
-    for(i=1986;i<2017;i++){
+    for(i=2016;i<2018;i++){
 	years.push(i);
     }
     Async.eachLimit(years,10,fetchAndInsertForYear,cb);
