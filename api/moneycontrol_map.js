@@ -104,7 +104,8 @@ function insertToTable(cb){
 	if(err){
 	    return cb(err);
 	}
-	Async.mapLimit(symbols,100,function (symbol,callback){	
+	Async.mapLimit(symbols,100,function (symbol,callback){
+          debugger
 	    MoneyControlApi.getMoneyControlSymbol(symbol,function (err,returnOpts){
 		var returnData={symbol:symbol}
 		if(err){

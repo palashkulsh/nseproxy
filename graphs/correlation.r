@@ -138,7 +138,6 @@ findDiffFromAvg <- function (symbols,afterdate=NULL,duration=50,smatime=50){
     return(data);			    			    
 }
 
-
 findCorrelation<- function(symbol1,symbol2){
     con <- singleConnect();
     on.exit(dbDisconnect(con));
@@ -203,8 +202,6 @@ findPairwiseCrossCorrelation<-function(){
 }
 #return (corMat)    ;
 }
-
-
 
 findAllSymbols<- function(){
     con <- singleConnect();
@@ -394,7 +391,7 @@ plotAllBelowBookValue <-function(){
 	plotManySimultaneously(findStocksBelowBookValue()$symbol,functor=plotSingleWithValue);
 }
 
-findFinData<- function(symbol){
+findFinData<- function(symbol,key_type='ratios'){
     con <- singleConnect();
     on.exit(dbDisconnect(con));
     dbSendQuery(con,'use stocks');
@@ -405,36 +402,36 @@ findFinData<- function(symbol){
     return(data);			  			   
 }
 
-findRawFinData<- function(symbol,afteryear=2000){
+findRawFinData<- function(symbol,afteryear=2000,key_type='ratios'){
     con <- singleConnect();
     on.exit(dbDisconnect(con));
     dbSendQuery(con,'use stocks');
-    query<-sprintf("select symbol month,year,replace(replace(key_text,' ',''),'.','') as key_text,value From fin where symbol='%s' and year>%s;",symbol,afteryear)
+    query<-sprintf("select symbol month,year,replace(replace(key_text,' ',''),'.','') as key_text,value From fin where symbol='%s' and year>%s and key_type='%s';",symbol,afteryear, key_type)
     f<-dbSendQuery(con,query);  
     data<-fetch(f,n=-1);#n=-1 fetches all pending records
     na.omit(data);
     return(data);			  			   
 }
 
-findAllNearLow<-function(){
+findAllNearLow<-function(duration=365, min=0,max=10){
     con <- singleConnect();
     on.exit(dbDisconnect(con));
     dbSendQuery(con,'use stocks');
-    query<-sprintf("select symbol,52l,52ldt,52h,52hdt,lastprice, recovery from (select symbol,52l,52ldt,52h,52hdt,lastprice,(lastprice-52l)/52l*100 as recovery from (select symbol,min(average_price) as 52l,strvalformin(average_price,date) as 52ldt,max(average_price) as 52h,strvalformax(average_price,date) as 52hdt,realvalfordatemax(year(date),month(date),dayofmonth(date),average_price) as lastprice from stock_data force index( `idx_date`) where date between date_sub(curdate(),interval 1 year) and date_sub(curdate(),interval 0 day) and series='EQ' group by symbol having strvalformin(average_price,date) between date_sub(curdate(),interval 7 day) and date_sub(curdate(),interval 0 day))tbl where (lastprice-52l)/52l*100 between 0 and 10)tb order by recovery;")
+    query<-sprintf("select symbol,52l,52ldt,52h,52hdt,lastprice, recovery from (select symbol,52l,52ldt,52h,52hdt,lastprice,(lastprice-52l)/52l*100 as recovery from (select symbol,min(average_price) as 52l,strvalformin(average_price,date) as 52ldt,max(average_price) as 52h,strvalformax(average_price,date) as 52hdt,realvalfordatemax(year(date),month(date),dayofmonth(date),average_price) as lastprice from stock_data force index( `idx_date`) where date between date_sub(curdate(),interval %s day) and date_sub(curdate(),interval 0 day) and series='EQ' group by symbol having strvalformin(average_price,date) between date_sub(curdate(),interval 7 day) and date_sub(curdate(),interval 0 day))tbl where (lastprice-52l)/52l*100 between %s and %s)tb order by recovery;",duration,min,max)
     f<-dbSendQuery(con,query);  
     data<-fetch(f,n=-1);#n=-1 fetches all pending records
     na.omit(data);
     return(data);			  			   
 }
 
-plotAllNearLow<-function(afterdate=Sys.Date()-365){
+plotAllNearLow<-function(duration=365, afterdate=Sys.Date()-365,min=0,max=10){
 	#plotManySimultaneously(findAllNearLow()$symbol,functor=plotSingle,filename='near_low.pdf');
-	plotManyWrap(findAllNearLow()$symbol,afterdate=afterdate)
+	plotManyWrap(findAllNearLow(duration=duration, min=min,max=max)$symbol,afterdate=afterdate)
 }
 
-plotFinGraph<-function(symbol,afterdate=NULL,afteryear=2000){
+plotFinGraph<-function(symbol,afterdate=NULL,afteryear=2000,key_type='ratios'){
     #provided afterdate for compatibility with plotManySimultaneously
-    data<-findRawFinData(symbol,afteryear);
+    data<-findRawFinData(symbol,afteryear,key_type);
     na.omit(data)
     p<-ggplot(data,aes(year,value))+geom_point(color='blue')+geom_line(color='black')+facet_wrap(~key_text,scales="free")+labs(title=symbol);
     return(p);

@@ -1,19 +1,26 @@
 var request = require("request");
 
+/**
+ * this function is prone to expiring cookies , then you need to re collect the cookie after some time
+ * */
 function  getQuote(symbol, cb){
     var options = { method: 'GET',
 		    url: 'https://www.nseindia.com/live_market/dynaContent/live_watch/get_quote/ajaxGetQuoteJSON.jsp',
 		    qs: { symbol: symbol },
-		    headers: 
-		    { 'postman-token': '0fcd6fc3-d1db-e512-5da3-72df04e3df1d',
-		      'cache-control': 'no-cache',
-		      cookie: '__gads=ID=96f0fff59164490e:T=1443434999:S=ALNI_MZOjn_NsbvrblXL5ac5Thj92bM0zg; _em_vt=bda8fcafe5cf3e5cbe88a9186897560911f8f1bdd0-429118155659b769; _gat=1; PHPSESSID=b0rkd7lf3actnc14fm96o53g50; dfp_cookie_floating=Y; stocks=|Zee.Media_ZN~4%7C; crtg_rta=; _ga=GA1.2.434474403.1443434999; mcusrtrk=4',
-		      'accept-language': 'en-US,en;q=0.8',
-		      referer: 'http://www.moneycontrol.com/india/stockpricequote/media-entertainment/zeemediacorporation/ZN',
-		      'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/50.0.2661.102 Chrome/50.0.2661.102 Safari/537.36',
-		      'x-requested-with': 'XMLHttpRequest',
-		      'x-devtools-emulate-network-conditions-client-id': '648FAF7D-AA2F-457C-AF49-7125D77F2F6D',
-		      accept: 'text/javascript, application/javascript, application/ecmascript, application/x-ecmascript, */*; q=0.01' } };
+		    headers: {
+                      Host: 'www.nseindia.com',
+                      'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:53.0) Gecko/20100101 Firefox/53.0',
+                      Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                      'Accept-Language': 'en-US,en;q=0.5',
+                      'Referer': 'https://www.google.co.in/',
+                      'Cookie': 'pointer=1; sym1=LT',
+                      'DNT': 1,
+                      'Connection': 'keep-alive',
+                      'Upgrade-Insecure-Requests': 1,
+                      'Cache-Control': 'max-age=0',
+                    }
+                    
+                  };
 
     request(options, function (error, response, body) {
 	if (error) throw new Error(error);

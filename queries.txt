@@ -66,6 +66,7 @@ select month(announcement),count(1) from dividend group by month(announcement) ;
 
 --> sector wise dividend giving distribution
 select industry,count(1),smm.name from dividend b inner join symbol_mc_map smm on b.symbol=smm.symbol group by industry order by count(1);
+select industry,count(1),smm.name,type from dividend b inner join symbol_mc_map smm on b.symbol=smm.symbol group by industry,type order by count(1);
 
 --> day wise distribution of ups and down and no change of all dates
 select dayofweek(date),dayname(date),count(case when close_price-open_price>0 then 1 end) as upcount,count(case when close_price-open_price<0 then 1 end) as downcount,count(case when close_price-open_price=0 then 1 end) as nochange from stock_data group by dayname(date) order by dayofweek(date)
@@ -117,7 +118,7 @@ select fin.symbol,fin.key_text,fin.value,sd.close_price,fin.value/sd.close_price
 select fin.symbol,fin.key_text,fin.value,sd.close_price from fin inner join stock_data sd on sd.symbol=fin.symbol and sd.date='2017-03-31' where replace(key_text," ","")='BookValue[ExclRevalReserve]/Share(Rs.)' and year=2016 and sd.series='eq' and sd.close_price<fin.value ;
 
 --> earnings per share > current market price
-select fin.symbol,fin.key_text,fin.value,sd.close_price from fin inner join stock_data sd on sd.symbol=fin.symbol and sd.date='2017-03-31' where replace(key_text," ","")='RevenuefromOperations/Share(Rs.)' and year=2016 and sd.series='eq' and sd.close_price<fin.value order by fin.value-sd.close_price;
+select symbol,key_text,value,close_price, percent from (select fin.symbol symbol,fin.key_text key_text,fin.value value,sd.close_price close_price,fin.value/sd.close_price*100 as percent from fin inner join stock_data sd on sd.symbol=fin.symbol and sd.date='2017-10-27' where replace(key_text," ","")='RevenuefromOperations/Share(Rs.)' and year=2017 and sd.series='eq' and sd.close_price<fin.value order by fin.value-sd.close_price)tbl order by percent desc;
 
 select fin.symbol,fin.key_text,fin.value,sd.close_price from fin inner join stock_data sd on sd.symbol=fin.symbol and sd.date='2017-03-31' where replace(key_text," ","")='PBT/Share(Rs.)'` and year=2016 and sd.series='eq' and sd.close_price<fin.value order by fin.value-sd.close_price;
 
