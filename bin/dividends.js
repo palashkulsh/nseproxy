@@ -56,7 +56,7 @@ function insertToDividendsTable(data,cb){
     }else{
 	insertData = data;
     }
-    Async.eachLimit(insertData,1,function(eachData,lcb){
+    Async.eachLimit(insertData,30,function(eachData,lcb){
 	var query = util.format('insert into dividend (symbol,value_pcent,type,record,announcement,ex_dividend) values ("%s","%s","%s","%s","%s","%s")',eachData.symbol,eachData.value_pcent,eachData.type,eachData.record,eachData.announcement,eachData.ex_dividend);
 	debug(query);
 	SqlLib.exec(query,function (err){ 
