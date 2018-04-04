@@ -122,7 +122,13 @@ function insertToTable(cb){
 		});
 	    });
 	},function (err,result){
-	    console.log(result);
+	    var failures= result.map(function(eachData){
+		if(eachData.msg=='fail'){
+		    return eachData;
+		}
+	    })
+	    console.log(JSON.stringify(failures,null,4));
+	    return cb(null, failures);
 	});
     });
 }
@@ -139,7 +145,7 @@ module.exports= MoneyControlApi;
 	// HistoricalDataApi.getHistoricalData(opts,function (err,result){
 	//     console.log(err,result)
 	// })
-	MoneyControlApi.getMoneyControlSymbol('STAR',function (err,result){
+	MoneyControlApi.getMoneyControlSymbol('AGARIND',function (err,result){
 	    console.log(err,result)
 	});
 	// insertToTable(console.log);

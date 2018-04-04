@@ -7,3 +7,13 @@ run api/share_holding_pattern.js for populating holdings table which shows the s
 things to do
 -
 add proper doc so that can be used even after 10 years
+
+if getting the error that truncate for column as value is '-' then you need to change sql mode by
+
+
+flow for symbol_mc_map
+
+--> symbols should be present in config/symbols.js
+--> api/historical_data.js picks data of these symbols
+--> api/moneycontrol_map.js uses stocks_data symbol to fetch moneycontrol symbols
+--> bin/dividends.js picks symbols from symbol_mc_map to pick dividends of latest symbols

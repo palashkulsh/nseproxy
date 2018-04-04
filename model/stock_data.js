@@ -76,7 +76,7 @@ var StockDataModel = {
 		if(err){
 		    if(err.code==='ER_DUP_ENTRY' &&  err.errno===1062){
 			debug('data already present so not reinserting');
-			Util.log(err);
+			//Util.log(err);
 		    }else{
 			debug(err);
 		    }

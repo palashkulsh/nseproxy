@@ -2,7 +2,7 @@ var debug = require("debug")('bin.dividends');
 var util = require("util");
 var Async = require("async");
 var request = require("request");
-var tabletojson = require('tabletojson');
+var tabletojson = require('../lib/tabletojson');
 var SqlLib = require('../lib/mysqlcon');
 var moment = require('moment');
 
@@ -117,7 +117,7 @@ function fetchAndInsertForYear(year, cb){
 
 function fetAndInsertForAllYears(cb){
     var years= [];
-    for(i=2016;i<2018;i++){
+    for(i=2000;i<2019;i++){
 	years.push(i);
     }
     Async.eachLimit(years,10,fetchAndInsertForYear,cb);

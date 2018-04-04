@@ -4,7 +4,7 @@ var StockDataModel = require('../model/stock_data');
 var StockDataApi = {
     insert: StockDataModel.insert,
     getAllSymbols: function(cb){	
-	var query = 'select distinct symbol from stock_data where date="2017-04-19"';
+	var query = 'select distinct symbol from stock_data where date="2018-04-02" order by symbol';
 	StockDataModel.get(query, function (err, result){
 	    if(err){
 		return cb(err);
