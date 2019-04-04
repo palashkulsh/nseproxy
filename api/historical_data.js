@@ -13,7 +13,7 @@ var StockDataApi = require('../model/stock_data');
 var DateUtils = require('../lib/date_utils');
 var debug = require('debug')('api.historical_data');
 var Constants = require('../config/constants');
-var SYMBOL_LIMIT = 30;
+var SYMBOL_LIMIT = 70;
 var RANGE_LIMIT = 10;
 
 function httpsHandler(err, response, body, cb) {
@@ -210,8 +210,8 @@ module.exports=HistoricalData;
     if(require.main==module){
 	var options={
 	    symbol:' SPENTEX',
-	    fromDate:'03-04-2018',
-	    toDate:'04-04-2018',
+	    fromDate:'11-03-2019',
+	    toDate:'15-03-2019',
 	    days:364
 	}
 	getAndInsertHistDataForAllStocks(options,function (err,result){

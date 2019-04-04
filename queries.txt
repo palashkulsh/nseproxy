@@ -88,8 +88,11 @@ select dayofweek(date),dayname(date),count(case when close_price-open_price>0 th
 select symbol,min(average_price) as 52l,strvalformin(average_price,date) as 52ldt,realvalfordatemax(year(date),month(date),dayofmonth(date),average_price) as lastprice from stock_data force index( `idx_date`) where date between date_sub(curdate(),interval 1 year) and curdate() and series='EQ' group by symbol having strvalformin(average_price,date) between date_sub(curdate(),interval 15 day) and date_sub(curdate(),interval 7 day) and (lastprice-52l)/52l*100 between 3 and 4;
 
 
---> stocks with only buyers
-select symbol,open_price,close_price,low_price,high_price,(close_price-open_price)/open_price*100 as pchange from stock_data where date=curdate() and close_price=high_price and  (close_price-open_price)/open_price*100> 0 order by (close_price-open_price)/open_price*100;
+--> stocks with only buyers select
+symbol,open_price,close_price,low_price,high_price,(close_price-open_price)/open_price*100
+as pchange from stock_data where date=curdate() and
+close_price=high_price and (close_price-open_price)/open_price*100> 0
+order by (close_price-open_price)/open_price*100;
 
 
 --> stocks with only buyers for a period
@@ -146,4 +149,5 @@ select symbol,max(oc),min(oc),max(hl),min(hl),avg(oc) from  (select symbol,(clos
 --stocks with diff from moving avg  near 0 and positive slope
 select date,close_price,ema,ta_slope(diff,50) as diff from (select sd.date,sd.close_price,ta_sma(sdmov.close_price,50) as ema,sd.close_price-ta_ema(sdmov.close_price,50) as diff from stock_data sd inner join stock_data as sdmov on sd.date=sdmov.date and sd.symbol=sdmov.symbol and sd.series=sdmov.series where sd.symbol='vadilalind' and sd.series='EQ' and sd.date>'2012-01-01' order by date)tbl 
 
-
+------ marubozu query
+select count(case when ((close_price-high_price)/close_price*100)<1 and ((open_price-low_price)/open_price*100)<1 and close_price>open_price then 1 else 0 end) as green_marubozu from stock_data where symbol='pnb';

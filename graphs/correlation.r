@@ -65,7 +65,7 @@ findDataForSymbol<- function(symbol1,afterdate=NULL){
             query<-sprintf("%s and sd.date>'%s' ",query,afterdate);
     }
     query<-sprintf("%s order by date",query)
-f<-dbSendQuery(con,query);
+    f<-dbSendQuery(con,query);
     print(query)
     data<-fetch(f,n=-1);#n=-1 fetches all pending records
     data$date<-as.Date(data$date);
@@ -203,11 +203,11 @@ findPairwiseCrossCorrelation<-function(){
 #return (corMat)    ;
 }
 
-findAllSymbols<- function(){
+findAllSymbols<- function(query="select distinct symbol from stock_data"){
     con <- singleConnect();
     on.exit(dbDisconnect(con));
     dbSendQuery(con,'use stocks');
-    query<-"select distinct symbol from stock_data"
+    query<-query
     print(query);		     
     f<-dbSendQuery(con,query);
     data<-fetch(f,n=-1);#n=-1 fetches all pending records
@@ -282,7 +282,7 @@ plotSimultaneously<-function (symbol1,symbol2,afterdate=NULL){
 plotPriceAndAvg<-function (symbol1,afterdate=NULL,duration=50){
     pairWiseData<-findPriceAndMovAvgForSymbol(symbol1,afterdate=afterdate,duration=duration)
     pairWiseData<-na.omit(pairWiseData);
-    ggplot(pairWiseData,aes(date,close_price))+geom_line(aes(color=symbol1))+geom_line(data=pairWiseData,aes(date,ema,color='ema'))+geom_line(data=pairWiseData,aes(date,(ema-close_price)/((ema+close_price)/2),color='change'))+scale_colour_manual("",breaks = c(symbol1, 'ema','change'), values = c("red", "brown",'black'))
+    ggplot(pairWiseData,aes(date,close_price))+geom_line(aes(color=symbol1))+geom_line(data=pairWiseData,aes(date,ema,color='ema'),size=1.8)+scale_colour_manual("",breaks = c(symbol1, 'ema'), values = c("red", "blue"))
 }
 
 plotDiffFromAvg <- function (symbol1,afterdate=NULL,duration=50,smatime=50){
@@ -406,7 +406,7 @@ findRawFinData<- function(symbol,afteryear=2000,key_type='ratios'){
     con <- singleConnect();
     on.exit(dbDisconnect(con));
     dbSendQuery(con,'use stocks');
-    query<-sprintf("select symbol month,year,replace(replace(key_text,' ',''),'.','') as key_text,value From fin where symbol='%s' and year>%s and key_type='%s';",symbol,afteryear, key_type)
+    query<-sprintf("select symbol, month,year,replace(replace(key_text,' ',''),'.','') as key_text,value From fin where symbol='%s' and year>%s and key_type='%s';",symbol,afteryear, key_type)
     f<-dbSendQuery(con,query);  
     data<-fetch(f,n=-1);#n=-1 fetches all pending records
     na.omit(data);
@@ -425,15 +425,32 @@ findAllNearLow<-function(duration=365, min=0,max=10){
 }
 
 plotAllNearLow<-function(duration=365, afterdate=Sys.Date()-365,min=0,max=10){
-	#plotManySimultaneously(findAllNearLow()$symbol,functor=plotSingle,filename='near_low.pdf');
-	plotManyWrap(findAllNearLow(duration=duration, min=min,max=max)$symbol,afterdate=afterdate)
+	plotManySimultaneously(findAllNearLow()$symbol,functor=plotSingle,filename='near_low.pdf');
+	#plotManyWrap(findAllNearLow(duration=duration, min=min,max=max)$symbol,afterdate=afterdate)
+}
+
+
+findAllNearHigh<-function(duration=7){
+    con <- singleConnect();
+    on.exit(dbDisconnect(con));
+    dbSendQuery(con,'use stocks');
+    query<-sprintf("select symbol,max(average_price) as 52h,strvalformax(average_price,date) as 52hdt,realvalfordatemax(year(date),month(date),dayofmonth(date),average_price) as lastprice from stock_data force index( `idx_date`) where date between date_sub(curdate(),interval 1 year) and curdate() and series='EQ' group by symbol having strvalformax(average_price,date) between date_sub(curdate(),interval %s day) and date_sub(curdate(),interval 0 day);
+;",duration)
+    f<-dbSendQuery(con,query);  
+    data<-fetch(f,n=-1);#n=-1 fetches all pending records
+    na.omit(data);
+    return(data);			  			   
+}
+
+plotAllNearHigh<-function(duration=365, afterdate=Sys.Date()-365,min=0,max=10){
+	plotManySimultaneously(findAllNearHigh()$symbol,functor=plotSingle,filename='near_high.pdf');
 }
 
 plotFinGraph<-function(symbol,afterdate=NULL,afteryear=2000,key_type='ratios'){
     #provided afterdate for compatibility with plotManySimultaneously
     data<-findRawFinData(symbol,afteryear,key_type);
     na.omit(data)
-    p<-ggplot(data,aes(year,value))+geom_point(color='blue')+geom_line(color='black')+facet_wrap(~key_text,scales="free")+labs(title=symbol);
+    p<-ggplot(data,aes(paste(month,year,""),value))+geom_point(color='blue')+geom_line(color='black')+facet_wrap(~key_text,scales="free")+labs(title=symbol);
     return(p);
 }
 
@@ -446,9 +463,18 @@ plotManyImgSimultaneously <- function (symbols,afterdate=NULL,filename="default.
 dev.off()
 }
 
-saveFinGraph <- function (symbol,filename='default.jpg'){
-	     jpeg(filename);
-	     print(plotFinGraph(symbol),width=800);
+saveManyFinGraphs <- function (symbols, key_type="ratios",height=1024,width=2048, prefix="img_",location="/tmp/"){
+    for(s in 1:length(symbols)){
+          saveFinGraph(symbols[s],filename=paste(prefix, symbols[s],'.png',sep=""), key_type=key_type,height=height,width=width,location=location)
+    }
+}
+
+saveFinGraph <- function (symbol,filename='default.jpg', key_type="ratios",height=1024,width=2048, location="/tmp/"){
+       print("saving")
+       print(symbol)
+	     #png(filename,width=1024,height=1024,res=500);
+       png(paste(location,filename,sep=""),width=width,height=height);
+	     print(plotFinGraph(symbol,key_type=key_type));
 	     dev.off()
 }
 
