@@ -121,7 +121,6 @@ function getHistoricalData(options,cb){
     }
     Limiter.removeTokens(1,function (err,remainingRequests){
 	request( requestObj , function (err,res,body){
-	    debugger
 	    newHttpsHandler(err, res, body,cb);
 	});
     });
@@ -135,7 +134,6 @@ function getHistoricalData(options,cb){
    options.symbol
 */
 function getAndInsertHistoricalDataOverDateRange (options,cb){
-    debugger
     options.days = options.days || 300;
     var ranges = DateUtils.getDateRangeArray(options.fromDate,options.toDate,options.days,'DD-MM-YYYY','DD-MM-YYYY');    
     if(!ranges || !ranges.length){
@@ -210,8 +208,8 @@ module.exports=HistoricalData;
     if(require.main==module){
 	var options={
 	    symbol:' SPENTEX',
-	    fromDate:'11-03-2019',
-	    toDate:'15-03-2019',
+	    fromDate:'01-04-2019',
+	    toDate:'20-07-2019',
 	    days:364
 	}
 	getAndInsertHistDataForAllStocks(options,function (err,result){
