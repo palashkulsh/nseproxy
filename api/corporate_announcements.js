@@ -8,6 +8,8 @@ const cheerio = require('cheerio');
 var LIMIT=7;
 var RETRY = 0;
 
+var exclusion = ['Interest payment','Trading Window closure','Credit Rating','Analysts/Institutional Investor Meet/Con',' Regulation 74(5)', 'Regulation 30', 'lodr', 'Trading Plan', 'Postal Ballot', 'Change in Director', 'Board meeting', 'Certificate', 'sast', 'notice of'];
+
 function looseJsonParse(obj){
   obj = obj.trim();
   return rjson.parse(obj);
@@ -15,7 +17,6 @@ function looseJsonParse(obj){
 }
 
 function getAnnouncementData(url, cb){
-  debugger
   if(!url){
     return cb(null, {});
   }
@@ -64,7 +65,20 @@ function getDataParallel(options, cb){
         return cb(err);
       }
       console.log('total failed '+failed);
-      return cb(null, finalData);
+      //exclude on basis of exclusion list
+      let clonelist = [];
+      finalData.forEach(function(eachdata){
+        exclusion.forEach(function(eachex){
+          let reg = new RegExp(eachex,"ig");
+          if(eachdata.details && eachdata.details.match(reg)){
+            eachdata.exclude=1;
+          }
+        });
+        if(!eachdata.exclude){
+          clonelist.push(eachdata);
+        }
+      });
+      return cb(null, clonelist);
     })
   });
 }
@@ -102,7 +116,6 @@ function getData (options, cb){
     }
     async.eachLimit(body.rows,7, function (eachRow, lcb){
       //eachRow.link = '<a href="https://www.nseindia.com'+ eachRow.link+'">'+eachRow.desc+'</a>'
-      debugger
       eachRow.link = 'https://www.nseindia.com'+eachRow.link
       getAnnouncementData(eachRow.link, function (err, data){
         eachRow.company = eachRow.company+' '+eachRow.symbol;

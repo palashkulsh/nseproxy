@@ -1,0 +1,3 @@
+conda install plotly
+conda install -c anaconda mysql-connector-python
+pipenv install ta
