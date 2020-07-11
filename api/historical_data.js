@@ -208,8 +208,8 @@ module.exports=HistoricalData;
     if(require.main==module){
 	var options={
 	    symbol:' SPENTEX',
-	    fromDate:'31-10-2019',
-	    toDate:'09-11-2019',
+	    fromDate:'20-05-2020',
+	    toDate:'07-06-2020',
 	    days:364
 	}
 	getAndInsertHistDataForAllStocks(options,function (err,result){
