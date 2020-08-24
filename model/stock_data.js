@@ -21,16 +21,12 @@ function nseToSystemDataActual(data){
 	  return newData;
   }
   Object.keys(data).forEach(function (oldKey){
-	  if(oldKey=='Date'){	// directly converting date from api to new Date() gives date of next day due to time zones
-	    data[oldKey] = data[oldKey].getFullYear()+'-'+(data[oldKey].getMonth()+1)+'-'+data[oldKey].getDate();
-
-	  }
-	  if(Constants.NSE_TO_SYSTEM_MAP[oldKey]){
-      if(Constants.NSE_TO_SYSTEM_TYPE_MAP[oldKey]=='number' && isNaN(data[oldKey])){
+	  if(Constants.NSE_TO_SYSTEM_MAP_V2[oldKey]){
+      if(Constants.NSE_TO_SYSTEM_TYPE_MAP_V2[oldKey]=='number' && isNaN(data[oldKey])){
         debugger
         data[oldKey] = null;
       }
-      newData[Constants.NSE_TO_SYSTEM_MAP[oldKey]]=data[oldKey];
+      newData[Constants.NSE_TO_SYSTEM_MAP_V2[oldKey]]=data[oldKey];
 	  }
   });
   return newData;
