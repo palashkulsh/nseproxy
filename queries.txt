@@ -151,3 +151,7 @@ select date,close_price,ema,ta_slope(diff,50) as diff from (select sd.date,sd.cl
 
 ------ marubozu query
 select count(case when ((close_price-high_price)/close_price*100)<1 and ((open_price-low_price)/open_price*100)<1 and close_price>open_price then 1 else 0 end) as green_marubozu from stock_data where symbol='pnb';
+
+
+----
+select symbol,date,vol,vol_sma,(vol-vol_sma)/vol_sma*100 as vol_above_sma_pcent from (select symbol,date,total_traded_quantity as vol,ta_sma(total_traded_quantity+0.0, 13) as vol_sma from stock_data where date between date_sub(curdate(),interval 60 day) and curdate() )tbl where (((vol-vol_sma)/vol_sma)*100)>5 and date=curdate();
