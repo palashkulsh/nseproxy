@@ -17,6 +17,7 @@ var stockDataSchema = {
  */
 function nseToSystemDataActual(data){
   var newData={};
+  debugger
   if(!Object.keys(data) || !Object.keys(data).length){
 	  return newData;
   }
@@ -64,6 +65,7 @@ var StockDataModel = {
 	  var table=this.table;
 	  var insertData = nseToSystemData(data);
 	  if(!insertData || !insertData.length){
+      console.log('no dataaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
 	    return cb();
 	  }
 	  // if one or more data is already present then whole batch wont be inserted due to unique constraint

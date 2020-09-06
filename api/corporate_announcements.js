@@ -8,7 +8,9 @@ var rjson = require('relaxed-json');
 var html_tablify = require('html-tablify');
 var fs = require('fs');
 var async = require('async');
+var NseApiModel = require('../model/nse_api');
 const cheerio = require('cheerio');
+
 
 var LIMIT=5;
 var RETRY = 0;
@@ -30,15 +32,15 @@ function getAnnouncementData(url, cb){
     uri: url,
     timeout: 10000,
     headers:{
-      Host: 'www1.nseindia.com',
-      'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:70.0) Gecko/20100101 Firefox/70.0',
-      Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      'Accept-Language': 'en-US,en;q=0.5',
-      'Connection': 'keep-alive',
-      Cookie: 'JSESSIONID=FEFB4A0597F86022BA4C4D13E45E9D19.jvm1; NSE-TEST-1=1910513674.20480.0000; ak_bmsc=185AF4C81D8E3DFCE6E242DD8D57E12B75EF8D6F657800009160085F1E0E2412~plm2HW1CyJK6nr4SrPY5AnLSUnEFbcoU22J9FyNwkzch5Iqul3KJRGfEXKFX2cIwL/AwF9mzimo4NBNVFgXlxLzbLKw1xx/tvewBcG+jG9e3Oi7uItNIizrGAUfo3LUb++wqGqkzs/ZT3MEOnvn6A2YzX9A8AeVbjLhkIMji/PAGFu5WRBEzk+K4UgbAdB2JvC+jo7iAE9ZvgG13TgiYjFEIaG3uRXOV6qmoOSymzkE7JVlLd6wMTqoLV9tXmZvjKc; bm_mi=5131B954BDAF63989C08A168654B954F~GWVZRj3hMoRYGhPX4ciClGXIn+R4gBnw+VbcMuTCeT3wlr5OJPNL3+K1CGVTup0BXMDJ2CMyDRzt00jPA35e8+6NwiuSHBOl6ajCuO4hMeS1ZEY2yRb9ig6XQYlfHd1EcA859FHtyV/UYmohmSxcejSIg84CyQw30XCQrABx7Cv5NHk61zyOf6tZhsH+Rnk6bJ5xXbKsUNCKRXnC8ZfwT8RyrEEEVp4Eo+ZiEHsOnWEVGVoGrFDz49+GoWh5ECkjOBHzZxA5pfkDZw7+2g2u+SKpLHhGrSEfW+yXzu4rT0cvO/KfsItFGGuMuAbbxgOzyjdly1g0IiUf24DytwiRrGEz7dBSyoaQWvvZ7VkHZqQ=; bm_sv=92DEECF237C695527580FBB354E0EB73~OXDoBlkp9urRLw9/2bshr4teJmZkz1Mp3UINlf+tepVV0JoM8rwUOvbhw5Ln2Ct2M/4gFa25OcI1NW8Cc86d4kBEvYaGCQ29aSfAZB7Qp3gAyr7iiRfTCeCZn/TsTguqxgOlPGHFWYpG7ohEQu7pZUZxzdFPUBPGeaG4U1f/9JU=',
-        'Pragma':'no-cache',
-      'Upgrade-Insecure-Requests': 1,
-      'Cache-Control': 'no-cache'
+
+    'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:79.0) Gecko/20100101 Firefox/79.0',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.5',
+    'Connection': 'keep-alive',
+    'Upgrade-Insecure-Requests': '1',
+    'Pragma': 'no-cache',
+    'Cache-Control': 'no-cache',
+      'Cookie': '_ga=GA1.2.1464035869.1595747215; RT=z=1&dm=nseindia.com&si=325c692f-31e5-4dde-867c-d192ee5f40da&ss=ke8q1dj0&sl=0&tt=0&bcn=%2F%2F684fc53f.akstat.io%2F&ul=58ln1&hd=58lrr; ak_bmsc=B3DD7DD2EDC9C1896E5D21C7F2BF1BF175EF5B57C02D00003B1E4A5F6A55FE34~plaZTRW4saRWxj8keYXYKe4jQwApo3dMyWa8Xi1VZk+1lpGyFJLjEI8r8syR4SHSRkqYDgw1/vBpehrvXrn9D1gxZ4QlfL6VlTiTEctB09NXVhHSDMsQBYsfIvH9DQuMApZAP4jm9tPwcweJsE5jTFo6Iy6NX77qIvSmjeKvdRLj0GIGQcvpjd1BtuVGH1KG4BGycwqiznVuP5CCApbn5SfTUpg6dRRBHBP/edDcQdHdpCjtkbC5wy81UAFNVjiMgS; bm_mi=E2CC878EB265BA2AE1E90676289C03AD~i2JRnRXtTJB8Jh+pc+D/qzoUCEdOLbZt8X1I8VlFMABSJ6ndKlGnCv5c5KlP3g9WGkilsJPyRnDDS6CGis1pQSx5tQc6ztGr2esmlNLwggLe0+MxZWP6mZuZxnqIUhRGnYtkoYkcGQC9IAc9Tj+7VloY5H5UN3fzIX4KVGczR+WffYBSXb7NcsvfoSvSi3u03LIoYfILL2YcOY1xjVlfcGh9fV+qYCiqFtLhh9ZrRwntlKrgEBstkM+NVW66HhY7b3YiOkBj4njQ6XNUvVfOALnVZsl/rWTnCPOUK8qFEcJezESP2iglvD11wOWec5RGQ3lhqzyozTWZ3uyJSlUdkv9djh7oqv++qc13HZKT+3w=; bm_sv=BB5A3207778D43925748909B17BF58D3~uGjSXoc7AFCG1g2mDAKzw6cBnG7gvWjdhpfRhPKRuLMvXf7TSTH2xH02Ll0O8dW7EqOiaqQYdqKEPDTW6WxWuTCNg0DmRck1oHOErklTWPanfPrd4hI6NzCW7riAlILsFYK0aBgxlnNAba4gfzObZfJeGRLRrR8nRQ+RAx3zQwU=; JSESSIONID=FA9A2453F9CE3DDFD61AA2DDE620DDCF.tomcat2; NSE-TEST-1=1927290890.20480.0000'
     }
   };
   console.log('getting announcementData ',url)
@@ -110,16 +112,16 @@ function getData (options, cb){
     uri: 'https://www1.nseindia.com/corporates/directLink/latestAnnouncementsCorpHome.jsp?start='+options.offset+'&limit='+options.limit,    
     method:'GET',
     headers: {
-      Host: 'www.nseindia.com',
-      'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:66.0) Gecko/20100101 Firefox/66.0',
-      Accept: '*/*',
-      'Accept-Language': 'en-US,en;q=0.5'          ,
-      Referer: 'https://www.nseindia.com/corporates/common/announcement.htm',
-      'X-Requested-With': 'XMLHttpRequest',
-      Connection: 'keep-alive',
-      Cookie: 'JSESSIONID=0A80F6093B3F1D38A4DE4815394204D2.jvm1; NSE-TEST-1=1910513674.20480.0000; ak_bmsc=185AF4C81D8E3DFCE6E242DD8D57E12B75EF8D6F657800009160085F1E0E2412~plPIMPFCLGcApUNFKMCgShyQWoJhwef47PNTAGzsAiPhtgQa0OsLepw1T/q4cA5KqTHUd5UmTM/+hFDn8W0O3o7kkLH0b4CErFtlEd35FOPTrezZpdkSQIoZ50cactZ0Nnjpnsvks1F82V8aOgLgpgh3Nb54vtzGRfogMvsEiopxG33LRswbtOMaDJd1jNY+rXbgYwhfOlv9YgsTT+c+DMFFL7o8j8+WArhcPDuA2fPJ8=; bm_mi=5131B954BDAF63989C08A168654B954F~GWVZRj3hMoRYGhPX4ciClGXIn+R4gBnw+VbcMuTCeT3wlr5OJPNL3+K1CGVTup0Bk6WQ73hHc+sz4ijqxhHfTSvJZtKSFJs+MspJJvbY44z1zpOPKU99vXkLMPEGhl8BjTpBKKfGca3HgOJfGiQcU5DFWX0Pf13CdPPRNY6p5xJzf/m+Fb0dovuR87HIjPlcgTjpkz17i4/wkC3C6ZAahMjMI27SxPJkaaFGs46RcUQE3c19ooq2fo6+VxCIIFEoePi3l1DZ0LARQ9AwuXev2ISfmgybYzyaSN5oHkKkqtw=; bm_sv=92DEECF237C695527580FBB354E0EB73~OXDoBlkp9urRLw9/2bshr4teJmZkz1Mp3UINlf+tepVV0JoM8rwUOvbhw5Ln2Ct2M/4gFa25OcI1NW8Cc86d4kBEvYaGCQ29aSfAZB7Qp3ibKSDvqeo7GEH++sBmziWMc+pJJ6koL8rc0WdmhSZwW7Uk5uJn5cEoevmXROROlPs=',
-      Pragma: 'no-cache',
-      'Cache-Control': 'no-cache'
+      
+      'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:79.0) Gecko/20100101 Firefox/79.0',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.5',
+      'Connection': 'keep-alive',
+      'Upgrade-Insecure-Requests': '1',
+      'Pragma': 'no-cache',
+      'Cache-Control': 'no-cache',
+      'Cookie': '_ga=GA1.2.1464035869.1595747215; RT=z=1&dm=nseindia.com&si=325c692f-31e5-4dde-867c-d192ee5f40da&ss=ke8q1dj0&sl=0&tt=0&bcn=%2F%2F684fc53f.akstat.io%2F&ul=58ln1&hd=58lrr; ak_bmsc=B3DD7DD2EDC9C1896E5D21C7F2BF1BF175EF5B57C02D00003B1E4A5F6A55FE34~pliXQ5HPjjgT4ypvyWamYkqsCEDbqFQEgraNjNzaQuOfsAPnmckpmuLY1s7RlYOXtKpuGZ5Kyowlxd2oSwfZJr3zEDOfdZhZ6wfAJZwc3qTC86/cOZZCLEoxhkmM68THPisd4Ae5dFA4/D6OszYNLCI9HCoXJcC1IktY2sG6Nat9R99oe+bsUsuj9S3Oatiq0e5VSQqU1qETEoj+O4OjzvDbhhzrMiC2u9IQ8hYc+06LY='
+
     },
     json:true
   }
