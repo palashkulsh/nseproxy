@@ -1,0 +1,15 @@
+module.exports={  
+Host: 'www.paytmmoney.com' ,
+'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:79.0) Gecko/20100101 Firefox/79.0',
+Accept: 'application/json, text/plain, */*',
+'Accept-Language': 'en-US,en;q=0.5',
+'x-request-id': 'f1ed4610-db7f-11ea-86d6-3325196958c5',
+'x-user-id': 21108057,
+'X-XSRF-TOKEN': 'tkPuzt6l-1Bdo5af-pqPGtS6gUGBJqlET0dA',
+Referer: 'https://www.paytmmoney.com/mutual-funds/scheme/nippon-india-vision-direct-growth/inf204k01f20',
+Connection: 'keep-alive',
+Cookie: '_ga=GA1.2.790142830.1592291320; dev-id=bf892781-0261-4979-904d-dbf394afcb36; x-uid=9027450334; RT="dm=paytmmoney.com&si=689cd2ca-7645-4120-ad81-010c1411022a&ss=1597115242561&sl=0&tt=0&obo=0&sh=&bcn=%2F%2F684d0d3b.akstat.io%2F"; _csrf=L399dY2445A91cjIJ_-jEj8h; XSRF-TOKEN=tkPuzt6l-1Bdo5af-pqPGtS6gUGBJqlET0dA; _gid=GA1.2.700095468.1597115246; x-sso-token=329d7b73-f9ee-47dc-8709-7ee663dd6100; x-user-agent=%7B%22platform%22%3A%22web%22%2C%22user_id%22%3A%2221108057%22%7D; _gat_UA-120513955-1=1',
+Pragma: 'no-cache',
+  'Cache-Control': 'no-cache',
+
+};
