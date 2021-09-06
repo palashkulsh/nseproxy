@@ -3,7 +3,7 @@ var Util = require('util');
 var request = require('request');
 var RateLimiter = require('limiter').RateLimiter;
 var Limiter = new RateLimiter(50,'sec'); // limiting to 100 requests per sec
-var SqlLimiter = new RateLimiter(100,'sec'); // limiting to 50 requests per sec
+var SqlLimiter = new RateLimiter(300,'sec'); // limiting to 50 requests per sec
 
 var htmlparser = require('htmlparser2');
 var xpath = require('xpath');
@@ -205,6 +205,7 @@ function getAndInsertHistoricalData(rangeOpts,callback){
 function getAndInsertHistDataForAllStocks(options,callback){
   var allOpts=[];
   var temp={};
+  debugger
   Constants.symbols.forEach(function (eachSymbol){
 	  temp={};
 	  temp.fromDate=options.fromDate;
@@ -231,10 +232,10 @@ module.exports=HistoricalData;
   if(require.main==module){
 	  var options={
 	    symbol:' SPENTEX',
-	    // fromDate:'20-08-2020',
+	    fromDate:'13-03-2021',
+	    toDate:'01-09-2021',
+	    // fromDate:'01-01-2019',
 	    // toDate:'04-09-2020',
-	    fromDate:'01-01-2019',
-	    toDate:'04-09-2020',
 	    days:60
 	  }
 	  getAndInsertHistDataForAllStocks(options,function (err,result){

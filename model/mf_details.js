@@ -32,7 +32,10 @@ var MfDataModel = {
 	  var singleBatchSize=1;	
 	  var dataMultiArray = DataUtils.multiArray(insertData,singleBatchSize);
 	  Async.eachLimit(dataMultiArray,1000,function (eachData,callback){
-	    query = table.insert(eachData);
+      let updatable = JSON.parse(JSON.stringify(eachData[0]));
+      delete updatable.isin;
+	    query = table.insert(eachData[0])
+        .onDuplicate(updatable);
 	    sqlLib.exec(query,function (err,result){
 		    if(err){
 		      if(err.code==='ER_DUP_ENTRY' &&  err.errno===1062){

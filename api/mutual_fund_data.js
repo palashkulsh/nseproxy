@@ -3,8 +3,8 @@ var Util = require('util');
 var Moment = require('moment');
 var request = require('request');
 var RateLimiter = require('limiter').RateLimiter;
-var Limiter = new RateLimiter(50,'sec'); // limiting to 100 requests per sec
-var SqlLimiter = new RateLimiter(20,'sec'); // limiting to 50 requests per sec
+var Limiter = new RateLimiter(100,'sec'); // limiting to 100 requests per sec
+var SqlLimiter = new RateLimiter(2000,'sec'); // limiting to 50 requests per sec
 
 const mfsList = require('../config/mfs');
 var MfModel = require('../model/mf_data');
@@ -45,7 +45,7 @@ function insertDataForIsin(isin, cb){
         date: Moment(eachNav.date).format('YYYY-MM-DD'), //convert to date
         nav: eachNav.value,
         isin: res.data.isin,
-        name: res.data.name
+        name: res.data.name || ''
       })
     });
 

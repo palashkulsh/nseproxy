@@ -4,6 +4,7 @@
 */
 
 var request = require('request');
+const { exec } = require("child_process");
 var rjson = require('relaxed-json');
 var html_tablify = require('html-tablify');
 var fs = require('fs');
@@ -12,10 +13,10 @@ var NseApiModel = require('../model/nse_api');
 const cheerio = require('cheerio');
 
 
-var LIMIT=5;
+var LIMIT=1;
 var RETRY = 0;
 
-var exclusion = ['Interest payment','Trading Window closure','Credit Rating','Analysts/Institutional Investor Meet/Con',' Regulation 74(5)', 'Regulation 30', 'lodr', 'Trading Plan', 'Postal Ballot', 'Change in Director', 'Board meeting', 'Certificate', 'sast', 'notice of'];
+var exclusion = ['Interest payment','Trading Window closure','Analysts/Institutional Investor Meet/Con. Call Updates','Credit Rating',' Regulation 74(5)', 'Regulation 30', 'lodr', 'Trading Plan', 'Postal Ballot', 'Change in Director', 'Board meeting', 'Certificate', 'sast', 'notice of'];
 
 function looseJsonParse(obj){
   obj = obj.trim();
@@ -43,12 +44,15 @@ function getAnnouncementData(url, cb){
       'Cookie': '_ga=GA1.2.1464035869.1595747215; RT=z=1&dm=nseindia.com&si=325c692f-31e5-4dde-867c-d192ee5f40da&ss=ke8q1dj0&sl=0&tt=0&bcn=%2F%2F684fc53f.akstat.io%2F&ul=58ln1&hd=58lrr; ak_bmsc=B3DD7DD2EDC9C1896E5D21C7F2BF1BF175EF5B57C02D00003B1E4A5F6A55FE34~plaZTRW4saRWxj8keYXYKe4jQwApo3dMyWa8Xi1VZk+1lpGyFJLjEI8r8syR4SHSRkqYDgw1/vBpehrvXrn9D1gxZ4QlfL6VlTiTEctB09NXVhHSDMsQBYsfIvH9DQuMApZAP4jm9tPwcweJsE5jTFo6Iy6NX77qIvSmjeKvdRLj0GIGQcvpjd1BtuVGH1KG4BGycwqiznVuP5CCApbn5SfTUpg6dRRBHBP/edDcQdHdpCjtkbC5wy81UAFNVjiMgS; bm_mi=E2CC878EB265BA2AE1E90676289C03AD~i2JRnRXtTJB8Jh+pc+D/qzoUCEdOLbZt8X1I8VlFMABSJ6ndKlGnCv5c5KlP3g9WGkilsJPyRnDDS6CGis1pQSx5tQc6ztGr2esmlNLwggLe0+MxZWP6mZuZxnqIUhRGnYtkoYkcGQC9IAc9Tj+7VloY5H5UN3fzIX4KVGczR+WffYBSXb7NcsvfoSvSi3u03LIoYfILL2YcOY1xjVlfcGh9fV+qYCiqFtLhh9ZrRwntlKrgEBstkM+NVW66HhY7b3YiOkBj4njQ6XNUvVfOALnVZsl/rWTnCPOUK8qFEcJezESP2iglvD11wOWec5RGQ3lhqzyozTWZ3uyJSlUdkv9djh7oqv++qc13HZKT+3w=; bm_sv=BB5A3207778D43925748909B17BF58D3~uGjSXoc7AFCG1g2mDAKzw6cBnG7gvWjdhpfRhPKRuLMvXf7TSTH2xH02Ll0O8dW7EqOiaqQYdqKEPDTW6WxWuTCNg0DmRck1oHOErklTWPanfPrd4hI6NzCW7riAlILsFYK0aBgxlnNAba4gfzObZfJeGRLRrR8nRQ+RAx3zQwU=; JSESSIONID=FA9A2453F9CE3DDFD61AA2DDE620DDCF.tomcat2; NSE-TEST-1=1927290890.20480.0000'
     }
   };
-  console.log('getting announcementData ',url)
-  request(options, function (error, response, body) {
+  console.log('getting announcementData ',url)  
+  
+  let cookiefile = `/tmp/cookie_${Date.now()}.txt`
+  exec(`curl -s -b ${cookiefile} -c ${cookiefile} '${url}' -H 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:81.0) Gecko/20100101 Firefox/81.0' -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8' -H 'Accept-Language: en-US,en;q=0.5' --compressed -H 'Connection: keep-alive' -H 'Pragma: no-cache' -H 'Cache-Control: no-cache'`, {maxBuffer: 1024*1024*1024}, (error, body, stderr) => {
+
     console.log('got getAnnouncementData')
-    if (error) {
-      console.log(error)
-      return cb(error)
+    if (error || stderr) {
+      console.log(error || stderr)
+      return cb(error || stderr)
     };
     const $ = cheerio.load(body);
     let url , details;
@@ -128,9 +132,10 @@ function getData (options, cb){
   
   console.log('getting data for '+opts.uri)
   console.log('getting data for '+options.offset);
-  request(opts,function (err, res, body){
+  let cookiefile = `/tmp/cookie_${Date.now()}.txt`
+  exec(`curl -s -b ${cookiefile} -c ${cookiefile} 'https://www1.nseindia.com/corporates/directLink/latestAnnouncementsCorpHome.jsp?start=${options.offset}&limit=${options.limit}' -H 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:81.0) Gecko/20100101 Firefox/81.0' -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8' -H 'Accept-Language: en-US,en;q=0.5' --compressed -H 'Connection: keep-alive'  -H 'Pragma: no-cache' -H 'Cache-Control: no-cache'`, {maxBuffer: 1024*1024*1024}, (error, body, stderr) => {
     console.log('got data '+options.offset);
-    if(err || !body){
+    if(error || !body || stderr){
       return cb(err || 'no body');
     }
     try{
@@ -159,7 +164,8 @@ function getData (options, cb){
     }, function finalCb(){
       return cb(null, body);
     });
-  });
+    
+      })
 }
 
 function getAllData(cb){
