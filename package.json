@@ -19,7 +19,7 @@
     "html-tablify": "^2.0.2",
     "htmlparser2": "^3.9.1",
     "limiter": "^1.1.0",
-    "moment": "^2.14.1",
+    "moment": "^2.29.4",
     "mysql": "^2.11.1",
     "q": "^1.5.1",
     "relaxed-json": "^1.0.3",
