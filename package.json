@@ -15,7 +15,7 @@
     "deasync": "^0.1.10",
     "debug": "^2.2.0",
     "domutils": "^1.5.1",
-    "express": "^4.14.0",
+    "express": "^4.18.2",
     "html-tablify": "^2.0.2",
     "htmlparser2": "^3.9.1",
     "limiter": "^1.1.0",
@@ -27,7 +27,7 @@
     "sentiment": "^2.1.0",
     "soupselect": "^0.2.0",
     "sql": "^0.70.1",
-    "tabletojson": "^0.4.0",
+    "tabletojson": "^2.0.7",
     "xml2js": "^0.4.17",
     "xpath": "0.0.23"
   }
