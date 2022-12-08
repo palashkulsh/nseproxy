@@ -15,7 +15,7 @@
     "deasync": "^0.1.10",
     "debug": "^2.2.0",
     "domutils": "^1.5.1",
-    "express": "^4.14.0",
+    "express": "^4.17.3",
     "html-tablify": "^2.0.2",
     "htmlparser2": "^3.9.1",
     "limiter": "^1.1.0",
