@@ -13,7 +13,7 @@ var NseApiModel = require('../model/nse_api');
 const cheerio = require('cheerio');
 
 
-var LIMIT=1;
+var LIMIT=10;
 var RETRY = 0;
 
 var exclusion = ['Interest payment','Trading Window closure','Analysts/Institutional Investor Meet/Con. Call Updates','Credit Rating',' Regulation 74(5)', 'Regulation 30', 'lodr', 'Trading Plan', 'Postal Ballot', 'Change in Director', 'Board meeting', 'Certificate', 'sast', 'notice of'];

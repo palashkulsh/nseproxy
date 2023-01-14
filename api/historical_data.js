@@ -233,7 +233,7 @@ module.exports=HistoricalData;
 	  var options={
 	    symbol:' SPENTEX',
 	    fromDate:'13-03-2021',
-	    toDate:'01-09-2021',
+	    toDate:'10-11-2021',
 	    // fromDate:'01-01-2019',
 	    // toDate:'04-09-2020',
 	    days:60
