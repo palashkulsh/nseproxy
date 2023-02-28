@@ -16,7 +16,7 @@
     "debug": "^2.2.0",
     "domutils": "^1.5.1",
     "express": "^4.14.0",
-    "html-tablify": "^2.0.2",
+    "html-tablify": "^2.0.4",
     "htmlparser2": "^3.9.1",
     "limiter": "^1.1.0",
     "moment": "^2.14.1",
